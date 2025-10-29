@@ -1,0 +1,54 @@
+.content-area {
+    height: calc(100vh - 100px);
+    overflow: hidden;
+}
+
+.reader-panel, .book-panel {
+    height: 100%;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    padding: 20px;
+}
+
+.reader-panel::-webkit-scrollbar,
+.book-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.reader-panel::-webkit-scrollbar-thumb,
+.book-panel::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+.reader-panel::-webkit-scrollbar-thumb:hover,
+.book-panel::-webkit-scrollbar-thumb:hover {
+    background-color: #999;
+}
+
+.page-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 10px 0;
+}
+
+.suggestions {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
