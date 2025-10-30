@@ -11,4 +11,7 @@ public class HomeController {
 
     @GetMapping("/admin")
     public String admin() { return "admin/home/home"; }
+
+    @GetMapping("/admin/lending")
+    public String lending() { return "admin/lending/lending"; }
 }
