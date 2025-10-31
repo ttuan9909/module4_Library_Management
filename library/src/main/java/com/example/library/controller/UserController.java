@@ -2,14 +2,18 @@ package com.example.library.controller;
 
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
+import com.example.library.dto.response.UserAccountdto;
 import com.example.library.entity.UserAccount;
 import com.example.library.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,5 +37,36 @@ public class UserController {
                                             @Valid @RequestBody ChangePasswordRequest req) {
         userService.changePassword(principal.getUsername(), req);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{search}")
+    public ResponseEntity<?> findUser(@PathVariable String search) {
+        Long userId = null;
+        String phoneNumber = null;
+        String email = null;
+
+        if (search.matches("\\d+")) {
+            if (search.length() >= 9) phoneNumber = search;
+            else userId = Long.valueOf(search);
+        } else if (search.contains("@")) {
+            email = search;
+        }
+
+        UserAccount user = userService.findByUserIdOrPhoneNumberOrEmail(userId, phoneNumber, email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User not found"));
+        }
+
+        UserAccountdto dto = new UserAccountdto(
+                user.getUserId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getAddress(),
+                user.getAvatarUrl(),
+                user.getStatus()
+        );
+        return ResponseEntity.ok(dto);
     }
 }

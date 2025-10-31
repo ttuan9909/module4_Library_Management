@@ -8,4 +8,5 @@ public interface IUserService {
     UserAccount me(String username);
     UserAccount updateProfile(String username, ProfileUpdateRequest request);
     void changePassword(String username, ChangePasswordRequest request);
+    UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email);
 }
