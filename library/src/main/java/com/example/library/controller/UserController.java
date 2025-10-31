@@ -3,10 +3,13 @@ package com.example.library.controller;
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
 import com.example.library.dto.response.UserAccountdto;
+import com.example.library.dto.useraccount.UserAccountDTO;
 import com.example.library.entity.UserAccount;
 import com.example.library.service.UserService;
+import com.example.library.service.useraccount.IUserAccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +22,10 @@ import java.util.Map;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+    @Autowired
     private final UserService userService;
+    @Autowired
+    IUserAccountService userAccountService;
 
     @GetMapping("/me")
     public ResponseEntity<UserAccount> me(@AuthenticationPrincipal User principal) {
@@ -68,5 +74,10 @@ public class UserController {
                 user.getStatus()
         );
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody @Valid UserAccountDTO dto) {
+        return ResponseEntity.ok(userAccountService.createUser(dto));
     }
 }

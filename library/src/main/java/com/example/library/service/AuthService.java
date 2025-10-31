@@ -6,7 +6,7 @@ import com.example.library.dto.response.AuthResponse;
 import com.example.library.entity.Role;
 import com.example.library.entity.UserAccount;
 import com.example.library.entity.enums.UserStatus;
-import com.example.library.repository.RoleRepository;
+import com.example.library.repository.role.RoleRepository;
 import com.example.library.repository.UserAccountRepository;
 import com.example.library.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class AuthService implements IAuthService {
         if (request.emailOrNull() != null && userRepo.existsByEmail(request.emailOrNull()))
             throw new IllegalArgumentException("Email already registered");
 
-        Role role = asAdmin
+        Optional<Role> role = asAdmin
                 ? roleRepo.findByRoleName("ROLE_ADMIN")
                 : roleRepo.findByRoleName("ROLE_READER");
 
@@ -45,7 +47,7 @@ public class AuthService implements IAuthService {
                 .username(request.username())
                 .passwordHash(encoder.encode(request.password()))
                 .status(UserStatus.ACTIVE)
-                .role(role)
+                .role(role.orElseThrow(() -> new IllegalStateException("Role not found")))
                 .build();
         userRepo.save(user);
     }
