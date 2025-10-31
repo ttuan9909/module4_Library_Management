@@ -1,7 +1,7 @@
 package com.example.library.controller;
-import com.example.library.dto.useraccount.UserAccountDTO;
-import com.example.library.repository.role.RoleRepository;
-import com.example.library.service.useraccount.UserAccountService;
+import com.example.library.dto.request.UserAccountDTO;
+import com.example.library.repository.RoleRepository;
+import com.example.library.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

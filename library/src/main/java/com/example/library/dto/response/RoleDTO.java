@@ -1,4 +1,4 @@
-package com.example.library.dto.useraccount;
+package com.example.library.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

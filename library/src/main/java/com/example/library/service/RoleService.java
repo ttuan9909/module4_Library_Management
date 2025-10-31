@@ -1,7 +1,7 @@
-package com.example.library.service.role;
+package com.example.library.service;
 
 import com.example.library.entity.Role;
-import com.example.library.repository.role.RoleRepository;
+import com.example.library.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.example.library.service.role;
+package com.example.library.service;
 
 import com.example.library.entity.Role;
 

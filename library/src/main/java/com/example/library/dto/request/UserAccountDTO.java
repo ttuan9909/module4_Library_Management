@@ -1,4 +1,4 @@
-package com.example.library.dto.useraccount;
+package com.example.library.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;

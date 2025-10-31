@@ -1,9 +1,9 @@
-package com.example.library.service.useraccount;
+package com.example.library.service;
 
-import com.example.library.repository.role.RoleRepository;
+import com.example.library.repository.RoleRepository;
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
-import com.example.library.dto.useraccount.UserAccountDTO;
+import com.example.library.dto.request.UserAccountDTO;
 import com.example.library.entity.Role;
 import com.example.library.entity.UserAccount;
 import com.example.library.entity.enums.UserStatus;
@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -1,12 +1,11 @@
-package com.example.library.service.useraccount;
+package com.example.library.service;
 
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
-import com.example.library.dto.useraccount.UserAccountDTO;
+import com.example.library.dto.request.UserAccountDTO;
 import com.example.library.entity.UserAccount;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface IUserAccountService {
     UserAccount me(String username);

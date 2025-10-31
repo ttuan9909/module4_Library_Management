@@ -6,7 +6,7 @@ import com.example.library.dto.response.AuthResponse;
 import com.example.library.entity.Role;
 import com.example.library.entity.UserAccount;
 import com.example.library.entity.enums.UserStatus;
-import com.example.library.repository.role.RoleRepository;
+import com.example.library.repository.RoleRepository;
 import com.example.library.repository.UserAccountRepository;
 import com.example.library.security.JwtService;
 import lombok.RequiredArgsConstructor;
