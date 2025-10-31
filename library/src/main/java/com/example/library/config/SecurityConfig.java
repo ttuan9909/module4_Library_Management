@@ -27,10 +27,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/", "/auth/**", "/error",
-                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
-                .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
+//                                .requestMatchers("/", "/auth/**", "/error",
+//                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+//                .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

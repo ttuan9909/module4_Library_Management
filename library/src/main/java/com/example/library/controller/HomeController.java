@@ -5,6 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class HomeController {
+
+    /** Trang chủ của hệ thống */
     @GetMapping("/")
-    public String index() { return "index"; } // templates/index.html
+    public String home() {
+        return "home";
+    }
 }

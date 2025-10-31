@@ -1,7 +1,7 @@
 package com.example.library.security;
 
 import com.example.library.entity.UserAccount;
-import com.example.library.repository.UserAccountRepository;
+import com.example.library.repository.useraccount.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

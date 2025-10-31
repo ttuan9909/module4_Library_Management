@@ -1,9 +1,9 @@
 package com.example.library.controller;
-
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
+import com.example.library.dto.useraccount.UserAccountDTO;
 import com.example.library.entity.UserAccount;
-import com.example.library.service.UserService;
+import com.example.library.service.useraccount.IUserAccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-public class UserController {
-    private final UserService userService;
+public class UserRestController {
+
+    private final IUserAccountService userService;
 
     @GetMapping("/me")
     public ResponseEntity<UserAccount> me(@AuthenticationPrincipal User principal) {
@@ -33,5 +34,10 @@ public class UserController {
                                             @Valid @RequestBody ChangePasswordRequest req) {
         userService.changePassword(principal.getUsername(), req);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody @Valid UserAccountDTO dto) {
+        return ResponseEntity.ok(userService.createUser(dto));
     }
 }

@@ -3,7 +3,7 @@ package com.example.library.service;
 import com.example.library.entity.PasswordResetToken;
 import com.example.library.entity.UserAccount;
 import com.example.library.repository.PasswordResetTokenRepository;
-import com.example.library.repository.UserAccountRepository;
+import com.example.library.repository.useraccount.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
