@@ -31,7 +31,7 @@ public class AuthService implements IAuthService {
         if (userRepo.existsByUsername(request.username()))
             throw new IllegalArgumentException("Username already taken");
 
-        if (request.emailOrNull() != null && userRepo.existsByEmail(request.emailOrNull()))
+        if (request.email() != null && userRepo.existsByEmail(request.email()))
             throw new IllegalArgumentException("Email already registered");
 
         Role role = asAdmin
@@ -40,7 +40,7 @@ public class AuthService implements IAuthService {
 
         UserAccount user = UserAccount.builder()
                 .fullName(request.fullName())
-                .email(request.emailOrNull())
+                .email(request.email())
                 .phoneNumber(request.phoneOrNull())
                 .username(request.username())
                 .passwordHash(encoder.encode(request.password()))
