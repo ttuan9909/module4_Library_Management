@@ -1,0 +1,13 @@
+package com.example.library.repository;
+
+import com.example.library.entity.LibraryCard;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface LibraryCardRepository extends JpaRepository<LibraryCard, Long>{
+    Optional<LibraryCard> findByUserUserId(Long userId);
+}

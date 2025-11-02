@@ -10,19 +10,15 @@
 </head>
 <body>
 
-<!-- Sidebar -->
 <div th:replace="admin/fragment/sidebar :: sidebar"></div>
 
-<!-- Main content -->
 <div class="main-content">
     <div class="page-header mb-4 d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Borrow Books</h5>
-        <button class="btn btn-primary"> Save </button>
+        <button class="btn btn-primary" onclick="borrowBook()"> Save </button>
     </div>
 
-    <!-- Content: 2 panels side by side -->
     <div class="content-area row g-4">
-        <!-- Reader Panel -->
         <div class="col-md-4">
             <div class="reader-panel">
                 <h6 class="mb-3">Reader Information</h6>
@@ -31,10 +27,8 @@
                     <input id="readerSelectInput" type="text" class="form-control" placeholder="Enter User ID, Phone Number or Email">
                     <button class="btn btn-primary" onclick="searchUser()">Select</button>
                 </div>
-
-                <div id="userInfo" class="mt-3">
-                    <p id="errorMessage"></p>
-                </div>
+                <small id="errorMessage" class="text-danger"></small>
+                <div id="userInfo" class="mt-3"></div>
             </div>
         </div>
 
@@ -43,30 +37,20 @@
             <div class="book-panel">
                 <h6 class="mb-3">Select Books to Borrow</h6>
 
-                <!-- Select book -->
                 <div class="input-group mb-2">
                     <input id="bookSelectInput" type="text" class="form-control" placeholder="Enter Book Code" onkeyup="showSuggestions(this.value)">
                     <button class="btn btn-primary" onclick="searchBook()">Select</button>
                 </div>
+                <small id="searchBookErrorMessage" class="text-danger"></small>
 
-<!--                &lt;!&ndash; Autocomplete suggestions &ndash;&gt;-->
-<!--                <div id="bookSuggestions" class="suggestions d-none"></div>-->
-
-<!--                &lt;!&ndash; Selected book result &ndash;&gt;-->
-<!--                <div id="bookResult" class="alert alert-info d-none mt-3">-->
-<!--                    <div class="d-flex justify-content-between align-items-center">-->
-<!--                        <span id="bookTitle"></span>-->
-<!--                        <button class="btn btn-sm btn-success" onclick="addBook()">Add</button>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-                <!-- Selected books -->
                 <h6 class="mt-4">Selected Books</h6>
                 <table class="table table-hover align-middle" id="selectedBooksTable">
                     <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Book Title</th>
+                        <th>Publisher</th>
+                        <th>Due Date</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -82,6 +66,7 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     let selectedBooks = [];
+    let selectedUser = null;
 
     function searchUser() {
         const q = $("#readerSelectInput").val().trim();
@@ -92,32 +77,46 @@
         }
 
         const url = "/api/users/" + encodeURIComponent(q);
-        $("#errorMessage").text("Searching...");
         $("#userInfo").empty();
 
         $.ajax({
             url: url,
             type: "GET",
             success: function (data) {
-                const rows = `
-              <ul class="list-group">
-                <li class="list-group-item"><strong>Full Name:</strong> <span id="uFullName">${data.fullName ?? ""}</span></li>
-                <li class="list-group-item"><strong>Email:</strong> <span id="uEmail">${data.email ?? ""}</span></li>
-                <li class="list-group-item"><strong>Phone:</strong> <span id="uPhone">${data.phoneNumber ?? ""}</span></li>
-                <li class="list-group-item"><strong>Status:</strong> <span id="uStatus">${data.status ?? ""}</span></li>
-              </ul>`;
-                $("#userInfo").html(rows);
+                const statusClass = data.status === "ACTIVE" ? "text-success" : "text-danger";
+                selectedUser = data;
+
+                const card = `
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-person-circle fs-3 text-primary me-2"></i>
+                                <h6 class="card-title mb-0">${data.fullName ?? "Unknown User"}</h6>
+                            </div>
+                            <div class="ms-1">
+                                <p class="mb-1"><i class="bi bi-envelope text-secondary me-1"></i>
+                                    <strong>Email:</strong> ${data.email ?? "—"}</p>
+                                <p class="mb-1"><i class="bi bi-telephone text-secondary me-1"></i>
+                                    <strong>Phone:</strong> ${data.phoneNumber ?? "—"}</p>
+                                <p class="mb-0"><i class="bi bi-person-badge text-secondary me-1"></i>
+                                    <strong>Status:</strong> <span class="${statusClass}">${data.status ?? "Unknown"}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                $("#userInfo").html(card);
+                $("#errorMessage").text("");
             },
             error: function (xhr, status, error) {
-                let message = "Have an error.";
-                try {
-                    const json = JSON.parse(xhr.responseText);
-                    if (json.message) message = json.message;
-                } catch (e) {
-                    message = xhr.responseText || "Can't connect to server.";
-                }
+                // let message = "Have an error.";
+                // try {
+                //     const json = JSON.parse(xhr.responseText);
+                //     if (json.message) message = json.message;
+                // } catch (e) {
+                //     message = xhr.responseText || "Can't connect to server.";
+                // }
 
-                $("#errorMessage").text(message);
+                $("#errorMessage").text("User not found.");
                 $("#userInfo").empty();
                 console.error("Ajax error:", status, error);
             }
@@ -128,22 +127,99 @@
     function searchBook() {
         const q = $("#bookSelectInput").val().trim();
         if (!q) {
-            $("#errorMessage").text("Please enter book code.");
+            $("#searchBookErrorMessage").text("Please enter book code.");
             $("#bookResult").empty();
             return;
         }
 
-        const url = "/api/books/" + encodeURIComponent(q);
-        $("#errorMessage").text("Searching...");
+        const url = "/api/v1/publications/" + encodeURIComponent(q);
         $("#bookResult").empty();
 
         $.ajax({
             url: url,
             type: "GET",
             success: function (data) {
+                const exists = selectedBooks.some(book => book.barcode === data.barcode);
+                if (exists) {
+                    $("#searchBookErrorMessage").text("This book is already selected.");
+                    return;
+                }
                 selectedBooks.push(data);
                 console.log(selectedBooks);
+
+                showSelectedBooks();
+                $("#searchBookErrorMessage").text("");
+            },
+            error: function (xhr, status, error) {
+                $("#searchBookErrorMessage").text("Book not found.");
             }
         })
+    }
+
+    function showSelectedBooks() {
+        const today = new Date();
+        today.setDate(today.getDate() + 14);
+        const formattedDueDate = today.toISOString().split('T')[0]
+
+        const rows = selectedBooks.map((book, index) => {
+            return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${book.title}</td>
+                <td>${book.publisher}</td>
+                <td>
+                <input type="date" placeholder="Select due date" class="form-control-sm rounded-3 w-50 rounded-3 light-border" value="${formattedDueDate}">
+                </td>
+                <td><button class="btn btn-sm btn-danger" onclick="removeBook(${index})">Remove</button></td>
+            </tr>`;
+        }).join("");
+        $("#selectedBooksTable tbody").html(rows);
+    }
+
+
+    function removeBook(index) {
+        selectedBooks.splice(index, 1);
+        showSelectedBooks();
+    }
+
+    function borrowBook() {
+        if (!selectedUser) {
+            alert("Please select a user before borrowing books.");
+            return;
+        }
+
+        if (selectedBooks.length === 0) {
+            alert("Please select at least one book.");
+            return;
+        }
+
+        const books = selectedBooks.map((book, index) => {
+            const returnDate = $("#selectedBooksTable tbody tr:nth-child(" + (index + 1) + ") input").val();
+            return {
+                publicationId: book.publicationId,
+                returnDate: returnDate
+            };
+        });
+
+        const borrowBook = {
+            userId: selectedUser.id,
+            books: books
+        };
+
+        $.ajax({
+            url: "/api/v1/lending",
+            type: "POST",
+            data: JSON.stringify(borrowBook),
+            contentType: "application/json",
+            success: function (data) {
+                alert("Borrowed successfully.");
+                location.reload();
+            },
+            error: function (xhr, status, error) {
+                alert("Can't borrow books.");
+            }
+        })
+
+        console.log(borrowBook);
     }
 </script>
