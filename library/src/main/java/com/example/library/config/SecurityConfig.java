@@ -24,21 +24,38 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
     private final LibraryUserDetailsService userDetailsService;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
-//                                .requestMatchers("/", "/auth/**", "/error",
-//                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
-//                .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authenticationProvider(authProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+//     @Bean
+//     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//         http
+//                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
+// //                                .requestMatchers("/", "/auth/**", "/error",
+// //                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+// //                .anyRequest().authenticated()
+//                 )
+//                 .sessionManagement(session -> session
+//                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                 )
+//                 .authenticationProvider(authProvider())
+//                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//         return http.build();
+//     }
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/", "/auth/**", "/error",
+                             "/css/**", "/js/**", "/images/**", "/assets/**", "/users/**").permitAll()
+            .anyRequest().permitAll()
+        )
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .authenticationProvider(authProvider())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
+}
 
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
@@ -53,5 +70,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
+    
     }
+    
 }
+

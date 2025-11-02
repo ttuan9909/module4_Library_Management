@@ -33,9 +33,8 @@ public class UserAccountDTO {
     private String address;
     private LocalDate dateOfBirth;
     private String avatarUrl;
-
-    @NotNull(message = "Vui lòng chọn vai trò")
-    private Long roleId;
-
+    @Pattern(regexp = "ADMIN|READER", message = "Vai trò không hợp lệ.")
     private String roleName;
+    @Pattern(regexp = "ACTIVE|INACTIVE|BANNED", message = "Trạng thái không hợp lệ. Chỉ chấp nhận ACTIVE, INACTIVE, BANNED.")
+    private String status;
 }

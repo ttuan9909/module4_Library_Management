@@ -15,5 +15,5 @@ public class RoleDTO {
 
     @NotBlank(message = "Tên vai trò không được để trống")
     @Size(max = 50, message = "Tên vai trò không vượt quá 50 ký tự")
-    private String roleName;
+    private String roleName;    
 }

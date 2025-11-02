@@ -1,12 +1,12 @@
 package com.example.library.service;
 
-import com.example.library.repository.RoleRepository;
 import com.example.library.dto.request.ChangePasswordRequest;
 import com.example.library.dto.request.ProfileUpdateRequest;
 import com.example.library.dto.request.UserAccountDTO;
 import com.example.library.entity.Role;
 import com.example.library.entity.UserAccount;
 import com.example.library.entity.enums.UserStatus;
+import com.example.library.repository.RoleRepository;
 import com.example.library.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,31 +35,32 @@ public class UserAccountService implements IUserAccountService {
                 .address(entity.getAddress())
                 .dateOfBirth(entity.getDateOfBirth())
                 .avatarUrl(entity.getAvatarUrl())
-                .roleId(entity.getRole().getRoleId())
-                .roleName(entity.getRole().getRoleName())
+                .roleName(entity.getRole() != null ? entity.getRole().getRoleName() : null)
+                .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                 .build();
     }
 
-    private UserAccount toEntity(UserAccountDTO dto, Role role) {
+    // Cập nhật toEntity để nhận cả Role và Status đã được kiểm tra (VALIDATED)
+    private UserAccount toEntity(UserAccountDTO dto, Role role, UserStatus status) {
         return UserAccount.builder()
-                .userId(dto.getUserId())
                 .fullName(dto.getFullName())
                 .username(dto.getUsername())
-                .passwordHash(encoder.encode(dto.getPassword()))
+                .passwordHash(dto.getPassword() != null ? encoder.encode(dto.getPassword()) : null)
                 .email(dto.getEmail())
                 .phoneNumber(dto.getPhoneNumber())
                 .address(dto.getAddress())
                 .dateOfBirth(dto.getDateOfBirth())
                 .avatarUrl(dto.getAvatarUrl())
-                .role(role)
-                .status(UserStatus.ACTIVE)
+                .role(role) // Sử dụng role đã được kiểm tra
+                .status(status) // Sử dụng status đã được kiểm tra
                 .build();
     }
 
     // ========================== CRUD ==========================
     @Override
     public List<UserAccountDTO> getAllUsers() {
-        return userRepo.findAll()
+        // ⭐️ SỬ DỤNG findAllWithRole() - Đã sửa lỗi Lazy Initialization
+        return userRepo.findAllWithRole()
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -75,18 +76,39 @@ public class UserAccountService implements IUserAccountService {
     @Override
     @Transactional
     public UserAccountDTO createUser(UserAccountDTO dto) {
-        // Kiểm tra trùng
+        // 1. Validate trùng lặp cơ bản
         if (userRepo.findByUsername(dto.getUsername()).isPresent())
             throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
-        if (userRepo.findByEmail(dto.getEmail()).isPresent())
+        if (userRepo.existsByEmail(dto.getEmail()))
             throw new IllegalArgumentException("Email đã được sử dụng");
-        if (userRepo.findByPhoneNumber(dto.getPhoneNumber()).isPresent())
+        if (userRepo.existsByPhoneNumber(dto.getPhoneNumber()))
             throw new IllegalArgumentException("Số điện thoại đã tồn tại");
 
-        Role role = roleRepo.findById(dto.getRoleId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò"));
+        // 2. 🛡️ VALIDATE ROLE (Kiểm tra sự tồn tại của Role name)
+        Role targetRole;
+        if (dto.getRoleName() != null && !dto.getRoleName().isBlank()) {
+            targetRole = roleRepo.findByRoleName(dto.getRoleName())
+                    .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
+        } else {
+            // Gán role mặc định nếu không có
+            targetRole = roleRepo.findByRoleName("READER")
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định READER"));
+        }
 
-        UserAccount saved = userRepo.save(toEntity(dto, role));
+        // 3. 🚦 VALIDATE STATUS (Kiểm tra và chuyển đổi ENUM)
+        UserStatus status;
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+            try {
+                status = UserStatus.valueOf(dto.getStatus().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
+            }
+        } else {
+            // Gán trạng thái mặc định
+            status = UserStatus.ACTIVE;
+        }
+
+        UserAccount saved = userRepo.save(toEntity(dto, targetRole, status));
         return toDTO(saved);
     }
 
@@ -96,6 +118,7 @@ public class UserAccountService implements IUserAccountService {
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
 
+        // Cập nhật thông tin cơ bản
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
         user.setPhoneNumber(dto.getPhoneNumber());
@@ -103,10 +126,26 @@ public class UserAccountService implements IUserAccountService {
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setAvatarUrl(dto.getAvatarUrl());
 
-        if (dto.getRoleId() != null) {
-            Role role = roleRepo.findById(dto.getRoleId())
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò"));
-            user.setRole(role);
+        // 🛡️ Cập nhật ROLE (Chỉ khi DTO có cung cấp roleName mới)
+        if (dto.getRoleName() != null && !dto.getRoleName().isBlank() && !dto.getRoleName().equals(user.getRole().getRoleName())) {
+             Role newRole = roleRepo.findByRoleName(dto.getRoleName())
+                    .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
+             user.setRole(newRole);
+        }
+
+        // 🚦 Cập nhật STATUS (Chỉ khi DTO có cung cấp status mới)
+        if (dto.getStatus() != null && !dto.getStatus().isBlank() && !dto.getStatus().equals(user.getStatus().name())) {
+            try {
+                UserStatus newStatus = UserStatus.valueOf(dto.getStatus().toUpperCase());
+                user.setStatus(newStatus);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
+            }
+        }
+
+        // Nếu user nhập mật khẩu mới → cập nhật
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPasswordHash(encoder.encode(dto.getPassword()));
         }
 
         UserAccount updated = userRepo.save(user);
@@ -126,7 +165,6 @@ public class UserAccountService implements IUserAccountService {
         UserAccount user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
 
-        // ⚠️ Không kiểm tra mật khẩu cũ nữa
         user.setPasswordHash(encoder.encode(req.newPassword()));
         userRepo.save(user);
     }
@@ -142,7 +180,6 @@ public class UserAccountService implements IUserAccountService {
         UserAccount user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
 
-        // Cập nhật thông tin người dùng
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPhoneNumber(request.phoneNumber());

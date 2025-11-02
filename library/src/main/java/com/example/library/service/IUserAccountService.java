@@ -25,5 +25,7 @@ public interface IUserAccountService {
     UserAccountDTO updateUser(Long id, UserAccountDTO dto);
 
     void deleteUser(Long id);
+
+    // UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email);
 }
 
