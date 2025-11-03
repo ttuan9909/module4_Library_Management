@@ -2,7 +2,6 @@ package com.example.library.dto.response;
 
 import com.example.library.entity.Category;
 import com.example.library.entity.enums.BookStatus;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

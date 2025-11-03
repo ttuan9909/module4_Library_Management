@@ -14,7 +14,7 @@
         
         /* Sidebar Styling */
         .sidebar { width: 250px; height: 100vh; background-color: #f8f9fa; border-right: 1px solid #e5e5e5;
-                    position: fixed; top: 0; left: 0; padding: 0 20px 20px 20px; }
+                     position: fixed; top: 0; left: 0; padding: 0 20px 20px 20px; }
         .sidebar-brand {
             padding: 20px 0; 
             margin-bottom: 10px;
@@ -52,7 +52,7 @@
         /* Main Content (Giữ nguyên) */
         .main-content { margin-left: 250px; padding: 20px; }
         .page-header { background-color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                        display: flex; justify-content: space-between; align-items: center; }
+                         display: flex; justify-content: space-between; align-items: center; }
         .client-table { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
         .table td { padding: 12px; } 
 
@@ -118,6 +118,7 @@
                     <option value="ACTIVE">Hoạt động</option>
                     <option value="INACTIVE">Không hoạt động</option>
                     <option value="BANNED">Cấm</option>
+                    <option value="UNKNOWN">Khác</option>
                 </select>
             </div>
         </div>
@@ -137,7 +138,7 @@
             </tr>
             </thead>
             <tbody id="userTableBody">
-            <tr th:each="user, iterStat : ${users}">
+            <tr th:each="user, iterStat : ${users}" th:attr="data-user-id=${user.userId}">
                 <td th:text="${iterStat.count}" class="text-center">1</td>
                 <td>
                     <a th:href="@{'/users/detail/' + ${user.username}}" th:text="${user.fullName}" class="text-decoration-none fw-bold"></a>
@@ -155,13 +156,23 @@
                 </td>
                 
                 <td class="text-center">
-                    <a th:href="@{'/users/edit/' + ${user.username}}" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                    <a th:href="@{'/users/' + ${user.userId} + '/detail'}" 
+       class="btn btn-sm btn-outline-info me-2" 
+       title="Xem chi tiết">
+        <i class="fas fa-eye"></i>
+    </a>
+                    <button 
+                        class="btn-edit btn btn-sm btn-outline-primary me-1" 
+                        th:attr="data-user-id=${user.userId}" 
+                        title="Sửa"> 
                         <i class="fas fa-edit"></i>
-                    </a>
-                    <a th:href="@{'/users/delete/' + ${user.username}}" class="btn btn-sm btn-outline-danger" title="Xóa"
-                       onclick="return confirm('Xác nhận xóa thành viên này?')">
-                        <i class="fas fa-trash-alt"></i>
-                    </a>
+                    </button>
+                    <button 
+    class="btn-delete btn btn-sm btn-outline-danger" 
+    th:attr="data-user-id=${user.userId}" 
+    title="Xóa">
+    <i class="fas fa-trash-alt"></i>
+</button>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}" id="emptyRow">
@@ -226,8 +237,184 @@
     </div>
 </div>
 
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Chỉnh sửa thành viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" name="userId">
+                    <input type="hidden" id="editUsername" name="username">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Họ tên</label>
+                            <input type="text" id="editFullName" name="fullName" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="editEmail" name="email" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" id="editPhoneNumber" name="phoneNumber" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" id="editDateOfBirth" name="dateOfBirth" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <textarea id="editAddress" name="address" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Vai trò</label>
+                            <select id="editRoleName" name="roleName" class="form-select">
+                                <option value="READER">READER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select id="editStatus" name="status" class="form-select">
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="INACTIVE">INACTIVE</option>
+                                <option value="BANNED">BANNED</option>
+                                <option value="UNKNOWN">UNKNOWN</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Avatar URL</label>
+                        <input type="url" id="editAvatarUrl" name="avatarUrl" class="form-control" placeholder="URL hình ảnh đại diện">
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// LOGIC XỬ LÝ AJAX VÀ HIỆU ỨNG JS (Giữ nguyên)
+// ====================================================================
+// LOGIC CHỈNH SỬA THÀNH VIÊN (DÙNG USER ID)
+// ====================================================================
+$(document).ready(function() {
+    
+    // 1. Bắt sự kiện click nút Sửa và hiển thị Modal (AJAX GET: DÙNG USER ID)
+    $("#userTableBody").on("click", ".btn-edit", function() {
+        const userId = $(this).data("user-id"); 
+        
+        if (!userId) {
+            alert("Lỗi: Không tìm thấy User ID để chỉnh sửa.");
+            return;
+        }
+
+        // Dùng API GET /users/{id}
+        $.ajax({
+            url: `/users/${userId}`, // API GET: Lấy dữ liệu user theo ID
+            method: "GET",
+            success: function(user) {
+                // Đổ dữ liệu vào form Edit
+                $("#editUserId").val(user.userId); 
+                $("#editUsername").val(user.username);
+                $("#editFullName").val(user.fullName);
+                $("#editEmail").val(user.email);
+                $("#editPhoneNumber").val(user.phoneNumber);
+                $("#editAddress").val(user.address);
+                $("#editAvatarUrl").val(user.avatarUrl);
+                
+                // Xử lý DateOfBirth
+                if (user.dateOfBirth) {
+                    const dob = user.dateOfBirth.split('T')[0]; 
+                    $("#editDateOfBirth").val(dob);
+                } else {
+                    $("#editDateOfBirth").val('');
+                }
+
+                // Đổ dữ liệu Role & Status 
+                $("#editRoleName").val(user.roleName || 'READER');
+                $("#editStatus").val(user.status || 'ACTIVE'); 
+
+                $("#editUserModal").modal("show");
+            },
+            error: function(xhr) {
+                alert(`❌ Lỗi khi tải dữ liệu thành viên (ID: ${userId}): ${xhr.responseText}`);
+            }
+        });
+    });
+
+    // 2. Bắt sự kiện submit form Edit và gửi AJAX PUT (DÙNG USER ID)
+    $("#editUserForm").on('submit', function(e) { 
+        e.preventDefault(); 
+        
+        const userId = $("#editUserId").val(); 
+
+        // Thu thập đầy đủ dữ liệu từ các trường input trong Modal
+        const updatedData = {
+            username: $("#editUsername").val(), // Giữ nguyên username
+            fullName: $("#editFullName").val(),
+            email: $("#editEmail").val(),
+            phoneNumber: $("#editPhoneNumber").val(),
+            address: $("#editAddress").val(),
+            avatarUrl: $("#editAvatarUrl").val(),
+            dateOfBirth: $("#editDateOfBirth").val(),
+            roleName: $("#editRoleName").val(),
+            status: $("#editStatus").val()
+        };
+
+        // Dùng API PUT /users/update/{id}
+        $.ajax({
+            url: `/users/update/${userId}`,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(updatedData),
+            success: function(updatedUser) {
+                $("#editUserModal").modal("hide");
+                
+                // CẬP NHẬT BẢNG HIỂN THỊ 
+                const $row = $(`tr[data-user-id='${userId}']`);
+
+                const newRoleName = (updatedUser.roleName || 'READER').toUpperCase();
+                const newStatus = (updatedUser.status || 'ACTIVE').toUpperCase();
+                
+                $row.find('td:eq(1) a').text(updatedUser.fullName);
+                $row.find('td:eq(2)').text(updatedUser.email);
+                $row.find('td:eq(3)').text(updatedUser.phoneNumber);
+                $row.find('td:eq(4)').text(updatedUser.username);
+                
+                $row.find('td:eq(5)').html(`<span class="role-badge role-${newRoleName}">${newRoleName}</span>`);
+                $row.find('td:eq(6)').html(`<span class="status-badge status-${newStatus}">${newStatus}</span>`);
+
+                $row.addClass('new-row-pulse');
+                setTimeout(() => { $row.removeClass('new-row-pulse'); }, 3000);
+
+                alert("✅ Cập nhật thành viên thành công!");
+            },
+            error: function(xhr) {
+                alert("❌ Lỗi khi cập nhật thành viên: " + xhr.responseText);
+            }
+        });
+    });
+});
+
+// ====================================================================
+// LOGIC THÊM MỚI (ADD USER)
+// ====================================================================
 $("#addUserForm").submit(function (e) {
     e.preventDefault();
 
@@ -253,13 +440,12 @@ $("#addUserForm").submit(function (e) {
             const roleBadgeHtml = `<span class="role-badge role-${roleName}">${roleName}</span>`;
             const statusBadgeHtml = `<span class="status-badge status-${statusName}">${statusName}</span>`;
             
-            const editUrl = `/users/edit/${user.username}`;
-            const deleteUrl = `/users/delete/${user.username}`;
-            
+            // Dùng user.userId cho thao tác Sửa/Xóa của hàng mới
+            const deleteUrl = `/users/delete/${user.userId}`;
             const rowCount = $("#userTableBody tr").length + 1;
 
             const newRow = `
-                <tr class="new-row-pulse"> 
+                <tr class="new-row-pulse" data-user-id='${user.userId}'> 
                     <td class="text-center">${rowCount}</td>
                     <td><a href="/users/detail/${user.username}" class="text-decoration-none fw-bold">${user.fullName}</a></td>
                     <td>${user.email}</td>
@@ -271,7 +457,12 @@ $("#addUserForm").submit(function (e) {
                     <td class="text-center">${statusBadgeHtml}</td>
                     
                     <td class="text-center">
-                        <a href="${editUrl}" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></a>
+                        <button 
+                            class="btn-edit btn btn-sm btn-outline-primary me-1" 
+                            data-user-id="${user.userId}" 
+                            title="Sửa">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <a href="${deleteUrl}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xác nhận xóa thành viên này?')"><i class="fas fa-trash-alt"></i></a>
                     </td>
                 </tr>
@@ -292,7 +483,9 @@ $("#addUserForm").submit(function (e) {
     });
 });
 
+// ====================================================================
 // LOGIC LỌC BẢNG (Giữ nguyên)
+// ====================================================================
 $("#searchInput, #roleFilter, #statusFilter").on('input change', function() {
     const searchValue = $("#searchInput").val().toLowerCase();
     const roleFilter = $("#roleFilter").val().toUpperCase();
@@ -301,6 +494,9 @@ $("#searchInput, #roleFilter, #statusFilter").on('input change', function() {
 
     $("#userTableBody tr").each(function() {
         const $row = $(this);
+        // Bỏ qua hàng rỗng (nếu có)
+        if ($row.attr('id') === 'emptyRow') return; 
+
         const fullName = $row.find('td:eq(1) a').text().toLowerCase();
         const email = $row.find('td:eq(2)').text().toLowerCase();
         const phoneNumber = $row.find('td:eq(3)').text().toLowerCase();
@@ -332,10 +528,84 @@ $("#searchInput, #roleFilter, #statusFilter").on('input change', function() {
         }
     });
     
+    // Xử lý hiển thị hàng rỗng
     if (rowsVisible === 0) {
         $("#emptyRow").show();
     } else {
         $("#emptyRow").hide();
+    }
+});
+
+// ====================================================================
+// LOGIC XÓA THÀNH VIÊN (DÙNG AJAX DELETE)
+// ====================================================================
+$(document).ready(function() {
+    
+    // Bắt sự kiện click nút Xóa
+    $("#userTableBody").on("click", ".btn-delete", function() {
+        const $button = $(this);
+        const userId = $button.data("user-id"); 
+        const $row = $button.closest('tr');
+        const userName = $row.find('td:eq(1) a').text().trim(); // Lấy tên để hiển thị trong confirm
+
+        if (!userId) {
+            alert("Lỗi: Không tìm thấy User ID để xóa.");
+            return;
+        }
+
+        // Bước 1: Xác nhận xóa
+        if (!confirm(`Xác nhận xóa thành viên: ${userName} (ID: ${userId})?`)) {
+            return;
+        }
+
+        // Bước 2: Gọi AJAX DELETE
+        $.ajax({
+            // SỬ DỤNG API /users/{id} với phương thức DELETE
+            url: `/users/${userId}`, 
+            method: "DELETE",
+            contentType: "application/json",
+            success: function(response) {
+                // Bước 3: Cập nhật giao diện (Không reload trang)
+                
+                // Loại bỏ hàng khỏi bảng
+                $row.fadeOut(300, function() {
+                    $(this).remove();
+                    // Tùy chọn: Cập nhật lại số thứ tự (chỉ cần nếu bạn quan tâm đến cột #)
+                    updateRowNumbers(); 
+                });
+                
+                // Hiển thị thông báo thành công
+                alert(`✅ Xóa thành viên ${userName} thành công!`); 
+            },
+            error: function(xhr) {
+                let errorMessage = "Đã xảy ra lỗi không xác định khi xóa.";
+                try {
+                    // Cố gắng lấy thông báo lỗi chi tiết từ Service (nếu có)
+                    const errorJson = JSON.parse(xhr.responseText);
+                    // Dựa vào cách Spring trả lỗi (thường có field 'message' hoặc 'error')
+                    errorMessage = errorJson.message || errorJson.error || xhr.responseText; 
+                } catch (e) {
+                    errorMessage = xhr.responseText;
+                }
+                
+                // Hiển thị thông báo lỗi cho người dùng
+                alert(`❌ Lỗi khi xóa thành viên: ${errorMessage}`);
+            }
+        });
+    });
+    
+    // Hàm phụ: Cập nhật lại số thứ tự
+    function updateRowNumbers() {
+        $("#userTableBody tr:visible").each(function(index) {
+            $(this).find('td:first').text(index + 1);
+        });
+        
+        // Xử lý hàng rỗng
+        if ($("#userTableBody tr:visible").length === 0) {
+             $("#userTableBody").append('<tr id="emptyRow"><td colspan="8" class="text-center text-muted">Không có thành viên nào</td></tr>');
+        } else {
+             $("#emptyRow").remove();
+        }
     }
 });
 </script>

@@ -12,6 +12,9 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+    compileJava {
+        options.compilerArgs.add('-parameters')
+    }
 }
 
 configurations {
@@ -46,6 +49,10 @@ dependencies {
     runtimeOnly  'io.jsonwebtoken:jjwt-jackson:0.11.5'
     runtimeOnly  'com.mysql:mysql-connector-j'
 
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-parameters" // ⬅️ THÊM DÒNG NÀY
 }
 
 tasks.named('test') {

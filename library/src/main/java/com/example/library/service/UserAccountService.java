@@ -35,8 +35,10 @@ public class UserAccountService implements IUserAccountService {
                 .address(entity.getAddress())
                 .dateOfBirth(entity.getDateOfBirth())
                 .avatarUrl(entity.getAvatarUrl())
-                .roleName(entity.getRole() != null ? entity.getRole().getRoleName() : null)
-                .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+                .roleName(entity.getRole() != null && entity.getRole().getRoleName() != null 
+                    ? entity.getRole().getRoleName() : "UNKNOWN_ROLE")
+                // Đã sửa lỗi: Kiểm tra NULL cho Status (ENUM) an toàn
+                .status(entity.getStatus() != null ? entity.getStatus().name() : "UNKNOWN_STATUS")
                 .build();
     }
 
@@ -58,20 +60,25 @@ public class UserAccountService implements IUserAccountService {
 
     // ========================== CRUD ==========================
     @Override
+    @Transactional
     public List<UserAccountDTO> getAllUsers() {
-        // ⭐️ SỬ DỤNG findAllWithRole() - Đã sửa lỗi Lazy Initialization
-        return userRepo.findAllWithRole()
+        // Sử dụng findAllWithRole() - Đã sửa lỗi Lazy Initialization
+        return userRepo.findAllWithRole() 
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    
 
     @Override
-    public UserAccountDTO getUserById(Long id) {
+    @Transactional
+    public UserAccountDTO getUserById(Long id) { 
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
+        
         return toDTO(user);
     }
+
 
     @Override
     @Transactional
@@ -84,7 +91,7 @@ public class UserAccountService implements IUserAccountService {
         if (userRepo.existsByPhoneNumber(dto.getPhoneNumber()))
             throw new IllegalArgumentException("Số điện thoại đã tồn tại");
 
-        // 2. 🛡️ VALIDATE ROLE (Kiểm tra sự tồn tại của Role name)
+        // 2. VALIDATE ROLE (Kiểm tra sự tồn tại của Role name)
         Role targetRole;
         if (dto.getRoleName() != null && !dto.getRoleName().isBlank()) {
             targetRole = roleRepo.findByRoleName(dto.getRoleName())
@@ -95,7 +102,7 @@ public class UserAccountService implements IUserAccountService {
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định READER"));
         }
 
-        // 3. 🚦 VALIDATE STATUS (Kiểm tra và chuyển đổi ENUM)
+        // 3. VALIDATE STATUS (Kiểm tra và chuyển đổi ENUM)
         UserStatus status;
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             try {
@@ -126,21 +133,27 @@ public class UserAccountService implements IUserAccountService {
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setAvatarUrl(dto.getAvatarUrl());
 
-        // 🛡️ Cập nhật ROLE (Chỉ khi DTO có cung cấp roleName mới)
-        if (dto.getRoleName() != null && !dto.getRoleName().isBlank() && !dto.getRoleName().equals(user.getRole().getRoleName())) {
-             Role newRole = roleRepo.findByRoleName(dto.getRoleName())
+        // Cập nhật ROLE (Chỉ khi DTO có cung cấp roleName mới)
+        if (dto.getRoleName() != null && !dto.getRoleName().isBlank()) {
+             // Thêm check khác role để tránh gọi DB/tìm kiếm role nếu role không đổi
+             if (user.getRole() == null || !dto.getRoleName().equals(user.getRole().getRoleName())) {
+                Role newRole = roleRepo.findByRoleName(dto.getRoleName())
                     .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
-             user.setRole(newRole);
+                user.setRole(newRole);
+             }
         }
 
-        // 🚦 Cập nhật STATUS (Chỉ khi DTO có cung cấp status mới)
-        if (dto.getStatus() != null && !dto.getStatus().isBlank() && !dto.getStatus().equals(user.getStatus().name())) {
-            try {
-                UserStatus newStatus = UserStatus.valueOf(dto.getStatus().toUpperCase());
-                user.setStatus(newStatus);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
-            }
+        // Cập nhật STATUS (Chỉ khi DTO có cung cấp status mới)
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+             // Thêm check khác status để tránh gọi ENUM.valueOf nếu status không đổi
+             if (user.getStatus() == null || !dto.getStatus().equals(user.getStatus().name())) {
+                 try {
+                     UserStatus newStatus = UserStatus.valueOf(dto.getStatus().toUpperCase());
+                     user.setStatus(newStatus);
+                 } catch (IllegalArgumentException e) {
+                     throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
+                 }
+             }
         }
 
         // Nếu user nhập mật khẩu mới → cập nhật
@@ -153,12 +166,28 @@ public class UserAccountService implements IUserAccountService {
     }
 
     @Override
-    public void deleteUser(Long id) {
-        if (!userRepo.existsById(id)) {
-            throw new IllegalArgumentException("Không tìm thấy người dùng để xóa");
-        }
-        userRepo.deleteById(id);
+public void deleteUser(Long id) {
+    if (!userRepo.existsById(id)) {
+        throw new IllegalArgumentException("Không tìm thấy người dùng để xóa");
     }
+    
+    // ⭐️ BƯỚC CẢI TIẾN: Xử lý Lỗi Ràng buộc Khóa Ngoại tại đây (Tùy chọn)
+    // Nếu UserAccount có liên quan tới các giao dịch (ví dụ: BookLending),
+    // bạn phải xóa các giao dịch đó trước nếu không dùng ON DELETE CASCADE.
+    // Ví dụ: 
+    // lendingRepo.deleteByUserId(id); 
+    
+    try {
+        userRepo.deleteById(id);
+    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+        // Log lỗi chi tiết nếu bạn muốn
+        // log.error("Lỗi ràng buộc khi xóa User ID {}: {}", id, e.getMessage()); 
+        throw new IllegalStateException("Không thể xóa thành viên vì thành viên này đang có các giao dịch liên quan (mượn/trả sách). Vui lòng xử lý các giao dịch trước.");
+    } catch (Exception e) {
+         // Xử lý các lỗi khác
+         throw new RuntimeException("Lỗi không xác định khi xóa User ID " + id + ": " + e.getMessage());
+    }
+}
 
     @Override
     public void changePassword(String username, ChangePasswordRequest req) {
@@ -186,4 +215,6 @@ public class UserAccountService implements IUserAccountService {
         user.setAddress(request.address());
         return userRepo.save(user);
     }
+
+    
 }

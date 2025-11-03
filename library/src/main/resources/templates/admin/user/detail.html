@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chi tiết Thành viên</title>
+    
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+    <link th:href="@{/css/styles.css}" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script> 
+    
+    </head>
+<body class="sb-nav-fixed">
+
+    <div style="min-height: 56px; background-color: #343a40; color: white; padding: 15px;">
+        [Nội dung Navbar Tạm thời]
+    </div>
+
+    <div id="layoutSidenav">
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <a th:href="@{/admin}" class="text-decoration-none text-dark d-inline-block">
+                    <h4><i class="fas fa-book-open me-2"></i>LIBRARY LOGO</h4>
+                </a>
+            </div>
+            <a th:href="@{/admin}"><i class="fas fa-hand-holding-usd"></i> Book Lending</a>
+            <a th:href="@{/return}"><i class="fas fa-undo-alt"></i> Book Return</a>
+            <a th:href="@{/books}"><i class="fas fa-book"></i> Book List</a>
+            <a th:href="@{/publications}"><i class="fas fa-newspaper"></i> Publications</a>
+            <a th:href="@{/categories}"><i class="fas fa-tags"></i> Book Categories</a>
+            <a th:href="@{/users}" class="active"><i class="fas fa-users"></i> Members</a> 
+        </div>
+
+        <div id="layoutSidenav_content" style="margin-left: 250px;"> <main>
+                <div class="container-fluid px-4">
+                    <h1 class="mt-4">Chi tiết Thành viên</h1>
+                    <ol class="breadcrumb mb-4">
+                        <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/users}">Danh sách Thành viên</a></li>
+                        <li class="breadcrumb-item active">Chi tiết</li>
+                    </ol>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-user-circle me-1"></i>
+                            Thông tin chi tiết: <span th:text="${user.fullName}"></span>
+                            
+                            <a th:href="@{/users}" class="btn btn-secondary btn-sm float-end">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <img th:src="${user.avatarUrl} ?: @{/img/default-avatar.png}" 
+                                        alt="Avatar" 
+                                        class="rounded-circle" 
+                                        style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>
+
+                            <table class="table table-bordered detail-table">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 25%;">ID Thành viên</th>
+                                        <td th:text="${user.userId}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Họ và Tên</th>
+                                        <td th:text="${user.fullName}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tên đăng nhập</th>
+                                        <td th:text="${user.username}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td th:text="${user.email}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Mật khẩu</th>
+                                        <td>
+                                            <span class="text-muted">Đã được mã hóa. Không hiển thị.</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Số điện thoại</th>
+                                        <td th:text="${user.phoneNumber} ?: 'Chưa có'"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Địa chỉ</th>
+                                        <td th:text="${user.address} ?: 'Chưa có'"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ngày sinh</th>
+                                        <td th:text="${user.dateOfBirth} ? ${#temporals.format(user.dateOfBirth, 'dd-MM-yyyy')} : 'Chưa cập nhật'"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ngày tạo</th>
+                                        <td th:text="${user.createdAt} ? ${#temporals.format(user.createdAt, 'HH:mm dd/MM/yyyy')} : 'Không rõ'"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Vai trò</th>
+                                        <td>
+                                            <span class="badge bg-primary" th:text="${user.roleName}"></span>
+                                        </td>
+                                        </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <div style="text-align: center; padding: 10px; border-top: 1px solid #e5e5e5;">
+                [Nội dung Footer Tạm thời]
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script th:src="@{/js/scripts.js}"></script>
+</body>
+</html>

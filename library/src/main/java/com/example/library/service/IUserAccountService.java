@@ -8,6 +8,8 @@ import com.example.library.entity.UserAccount;
 import java.util.List;
 
 public interface IUserAccountService {
+
+    //USER PROFILE METHODS
     UserAccount me(String username);
 
     UserAccount updateProfile(String username, ProfileUpdateRequest request);
@@ -15,7 +17,7 @@ public interface IUserAccountService {
     void changePassword(String username, ChangePasswordRequest request);
 
 
-    //This is just a placeholder for future methods related to user account management
+    //ADMIN USER MANAGEMENT METHODS
     List<UserAccountDTO> getAllUsers();
 
     UserAccountDTO getUserById(Long id);
@@ -25,7 +27,6 @@ public interface IUserAccountService {
     UserAccountDTO updateUser(Long id, UserAccountDTO dto);
 
     void deleteUser(Long id);
-
     // UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email);
 }
 
