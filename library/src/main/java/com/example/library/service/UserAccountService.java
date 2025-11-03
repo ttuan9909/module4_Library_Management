@@ -75,10 +75,8 @@ public class UserAccountService implements IUserAccountService {
     public UserAccountDTO getUserById(Long id) { 
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
-        
         return toDTO(user);
     }
-
 
     @Override
     @Transactional
@@ -215,6 +213,4 @@ public void deleteUser(Long id) {
         user.setAddress(request.address());
         return userRepo.save(user);
     }
-
-    
 }

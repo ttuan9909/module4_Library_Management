@@ -30,18 +30,29 @@ public class UserAccountController {
         return "admin/user/list"; // chỉ còn trang list (modal thêm user nằm trong đây)
     }
 
-    // ====================== TÍNH NĂNG XEM CHI TIẾT ======================
-    // ⭐️ FIX: Chỉ định rõ @PathVariable("id")
-    @GetMapping("/{id}/detail")
-    public String getUserDetail(@PathVariable("id") Long id, Model model) {
+    // ✨ PHƯƠNG THỨC MỚI: Xem Chi Tiết theo ID ✨
+//    @GetMapping("/{userId}")
+//    public ResponseEntity<UserAccountDTO> getUserById(@PathVariable("userId") Long userId) {
+//        try {
+//            UserAccountDTO userDTO = userService.getUserById(userId);
+//            return ResponseEntity.ok(userDTO);
+//        } catch (RuntimeException ex) {
+//            // Xử lý nếu không tìm thấy người dùng
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//    }
+
+    // ✨ PHƯƠNG THỨC MỚI: Trả về trang View Chi Tiết (detail.html) ✨
+    // URL: GET /users/detail/123
+    @GetMapping("/detail/{userId}")
+    public String getUserDetailView(@PathVariable("userId") Long userId, Model model) {
         try {
-            UserAccountDTO userDto = userService.getUserById(id);
-            model.addAttribute("user", userDto);
-            return "admin/user/detail"; 
+            UserAccountDTO userDTO = userService.getUserById(userId);
+            model.addAttribute("user", userDTO); // Gửi DTO qua Model
+            return "admin/user/detail"; // Trả về tên View (detail.html)
         } catch (IllegalArgumentException e) {
-            // Chuyển hướng khi không tìm thấy ID
-            model.addAttribute("errorMessage", "Không tìm thấy người dùng: " + e.getMessage());
-            return "redirect:/users";
+            // Có thể thêm thông báo lỗi
+            return "redirect:/users/list"; // Chuyển hướng về trang danh sách nếu lỗi 404
         }
     }
     // ====================== AJAX CRUD ======================
@@ -55,7 +66,7 @@ public class UserAccountController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    
+
     // AJAX: LẤY DỮ LIỆU USER THEO ID (Dùng cho Modal Edit)
     // URL: GET /users/123
     @GetMapping("/{id}")
@@ -74,7 +85,7 @@ public class UserAccountController {
     @PutMapping("/update/{id}")
     @ResponseBody
     public ResponseEntity<?> updateUserAjax(@PathVariable("id") Long userId,
-                                            @RequestBody UserAccountDTO dto){ 
+                                            @RequestBody UserAccountDTO dto){
         try {
             UserAccountDTO updated = userService.updateUser(userId, dto);
             return ResponseEntity.ok(updated); // Trả về 200 OK với đối tượng đã cập nhật
@@ -86,14 +97,14 @@ public class UserAccountController {
     // ⭐️ API XÓA THÀNH VIÊN (DÙNG AJAX DELETE)
     // URL: DELETE /users/123
     @DeleteMapping("/{id}")
-    @ResponseBody 
+    @ResponseBody
     public ResponseEntity<?> deleteUser(@PathVariable("id") Long userId){
         try {
             // FIXED: Thay 'id' bằng 'userId'
-            userService.deleteUser(userId); 
-            
+            userService.deleteUser(userId);
+
             // Trả về response 200 OK khi thành công
-            return ResponseEntity.ok().build(); 
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             // Lỗi 404/400: Không tìm thấy người dùng
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));

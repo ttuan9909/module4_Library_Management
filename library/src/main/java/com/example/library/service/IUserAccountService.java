@@ -9,7 +9,8 @@ import java.util.List;
 
 public interface IUserAccountService {
 
-    //USER PROFILE METHODS
+    // USER PROFILE METHODS
+    // Thêm lại UserAccount me(String username) để đồng bộ với UserAccountService
     UserAccount me(String username);
 
     UserAccount updateProfile(String username, ProfileUpdateRequest request);
@@ -17,9 +18,10 @@ public interface IUserAccountService {
     void changePassword(String username, ChangePasswordRequest request);
 
 
-    //ADMIN USER MANAGEMENT METHODS
+    // ADMIN USER MANAGEMENT METHODS
     List<UserAccountDTO> getAllUsers();
 
+    // Phương thức đã dùng cho AJAX View Detail và Edit
     UserAccountDTO getUserById(Long id);
 
     UserAccountDTO createUser(UserAccountDTO dto);
@@ -27,6 +29,4 @@ public interface IUserAccountService {
     UserAccountDTO updateUser(Long id, UserAccountDTO dto);
 
     void deleteUser(Long id);
-    // UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email);
 }
-

@@ -37,4 +37,6 @@ public class UserAccountDTO {
     private String roleName;
     @Pattern(regexp = "ACTIVE|INACTIVE|BANNED", message = "Trạng thái không hợp lệ. Chỉ chấp nhận ACTIVE, INACTIVE, BANNED.")
     private String status;
+
+
 }
