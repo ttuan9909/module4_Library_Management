@@ -96,8 +96,8 @@ public class UserAccountService implements IUserAccountService {
                     .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
         } else {
             // Gán role mặc định nếu không có
-            targetRole = roleRepo.findByRoleName("READER")
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định READER"));
+            targetRole = roleRepo.findByRoleName("ROLE_READER")
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định ROLE_READER"));
         }
 
         // 3. VALIDATE STATUS (Kiểm tra và chuyển đổi ENUM)
