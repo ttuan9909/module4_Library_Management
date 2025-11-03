@@ -33,10 +33,15 @@ public class UserAccountDTO {
     private String address;
     private LocalDate dateOfBirth;
     private String avatarUrl;
+    
     @Pattern(regexp = "ROLE_ADMIN|ROLE_READER", message = "Vai trò không hợp lệ.")
     private String roleName;
+    
     @Pattern(regexp = "ACTIVE|LOCKED|DISABLED", message = "Trạng thái không hợp lệ. Chỉ chấp nhận ACTIVE, LOCKED, DISABLED.")
     private String status;
 
-
+    // ✨ TRƯỜNG MỚI: Thông tin thẻ thư viện ✨
+    // Khi thêm mới, trường này nên được điền
+    @NotNull(message = "Thông tin thẻ thư viện không được để trống.")
+    private LibraryCardDTO libraryCard; 
 }

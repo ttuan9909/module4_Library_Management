@@ -1,11 +1,15 @@
 package com.example.library.service;
 
 import com.example.library.dto.request.ChangePasswordRequest;
+import com.example.library.dto.request.LibraryCardDTO;
 import com.example.library.dto.request.ProfileUpdateRequest;
 import com.example.library.dto.request.UserAccountDTO;
+import com.example.library.entity.LibraryCard;
 import com.example.library.entity.Role;
 import com.example.library.entity.UserAccount;
+import com.example.library.entity.enums.LibraryCardStatus;
 import com.example.library.entity.enums.UserStatus;
+import com.example.library.repository.LibraryCardRepository;
 import com.example.library.repository.RoleRepository;
 import com.example.library.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +17,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random; 
 import java.util.stream.Collectors;
 
 @Service
@@ -22,10 +29,39 @@ public class UserAccountService implements IUserAccountService {
 
     private final UserAccountRepository userRepo;
     private final RoleRepository roleRepo;
+    private final LibraryCardRepository cardRepo; 
     private final PasswordEncoder encoder;
+    private final Random random = new Random(); 
 
     // ========================== DTO CONVERTERS ==========================
+
+    private LibraryCardDTO toLibraryCardDTO(LibraryCard card) {
+        if (card == null) return null;
+        return LibraryCardDTO.builder()
+                .cardNumber(card.getCardNumber())
+                .startDate(card.getStartDate()) 
+                .endDate(card.getEndDate())
+                .status(card.getStatus().name())
+                .notes(card.getNotes())
+                .build();
+    }
+
+    private LibraryCard toLibraryCardEntity(LibraryCardDTO dto) {
+        if (dto == null) return null;
+        return LibraryCard.builder()
+                .cardNumber(dto.getCardNumber()) 
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .notes(dto.getNotes())
+                .status(Optional.ofNullable(dto.getStatus())
+                        .map(s -> LibraryCardStatus.valueOf(s.toUpperCase()))
+                        .orElse(LibraryCardStatus.ACTIVE)) 
+                .build();
+    }
+    
     private UserAccountDTO toDTO(UserAccount entity) {
+        Optional<LibraryCard> cardOptional = cardRepo.findByUser_UserId(entity.getUserId());
+
         return UserAccountDTO.builder()
                 .userId(entity.getUserId())
                 .fullName(entity.getFullName())
@@ -37,12 +73,11 @@ public class UserAccountService implements IUserAccountService {
                 .avatarUrl(entity.getAvatarUrl())
                 .roleName(entity.getRole() != null && entity.getRole().getRoleName() != null 
                     ? entity.getRole().getRoleName() : "UNKNOWN_ROLE")
-                // Đã sửa lỗi: Kiểm tra NULL cho Status (ENUM) an toàn
                 .status(entity.getStatus() != null ? entity.getStatus().name() : "UNKNOWN_STATUS")
+                .libraryCard(cardOptional.map(this::toLibraryCardDTO).orElse(null)) 
                 .build();
     }
 
-    // Cập nhật toEntity để nhận cả Role và Status đã được kiểm tra (VALIDATED)
     private UserAccount toEntity(UserAccountDTO dto, Role role, UserStatus status) {
         return UserAccount.builder()
                 .fullName(dto.getFullName())
@@ -53,16 +88,36 @@ public class UserAccountService implements IUserAccountService {
                 .address(dto.getAddress())
                 .dateOfBirth(dto.getDateOfBirth())
                 .avatarUrl(dto.getAvatarUrl())
-                .role(role) // Sử dụng role đã được kiểm tra
-                .status(status) // Sử dụng status đã được kiểm tra
+                .role(role) 
+                .status(status) 
                 .build();
     }
 
+    // ========================== LOGIC TẠO CARD NUMBER MỚI ==========================
+    
+    private String generateUniqueCardNumber() {
+        String cardNumber;
+        boolean exists;
+        final String PREFIX = "CARD-";
+        
+        do {
+            int number = random.nextInt(1_000_000); 
+            String sixDigitString = String.format("%06d", number);
+            
+            cardNumber = PREFIX + sixDigitString;
+            
+            exists = cardRepo.existsByCardNumber(cardNumber);
+            
+        } while (exists); 
+
+        return cardNumber;
+    }
+
     // ========================== CRUD ==========================
+    
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<UserAccountDTO> getAllUsers() {
-        // Sử dụng findAllWithRole() - Đã sửa lỗi Lazy Initialization
         return userRepo.findAllWithRole() 
                 .stream()
                 .map(this::toDTO)
@@ -71,7 +126,7 @@ public class UserAccountService implements IUserAccountService {
     
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserAccountDTO getUserById(Long id) { 
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
@@ -88,33 +143,59 @@ public class UserAccountService implements IUserAccountService {
             throw new IllegalArgumentException("Email đã được sử dụng");
         if (userRepo.existsByPhoneNumber(dto.getPhoneNumber()))
             throw new IllegalArgumentException("Số điện thoại đã tồn tại");
-
-        // 2. VALIDATE ROLE (Kiểm tra sự tồn tại của Role name)
+        
+        // 2. VALIDATE ROLE
         Role targetRole;
-        if (dto.getRoleName() != null && !dto.getRoleName().isBlank()) {
-            targetRole = roleRepo.findByRoleName(dto.getRoleName())
-                    .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
+        String roleNameFromDto = dto.getRoleName();
+        
+        if (roleNameFromDto != null && !roleNameFromDto.isBlank()) {
+            targetRole = roleRepo.findByRoleName(roleNameFromDto)
+                    .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + roleNameFromDto + "' không tồn tại."));
         } else {
-            // Gán role mặc định nếu không có
+            // Sử dụng ROLE_READER mặc định (khuyến nghị dùng findByRoleNameIgnoreCase nếu đã thêm)
             targetRole = roleRepo.findByRoleName("ROLE_READER")
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định ROLE_READER"));
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy vai trò mặc định ROLE_READER. Vui lòng kiểm tra database để đảm bảo có bản ghi 'ROLE_READER'.")); 
         }
 
-        // 3. VALIDATE STATUS (Kiểm tra và chuyển đổi ENUM)
+        // 3. VALIDATE STATUS
         UserStatus status;
-        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
-            try {
-                status = UserStatus.valueOf(dto.getStatus().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
-            }
-        } else {
-            // Gán trạng thái mặc định
-            status = UserStatus.ACTIVE;
+        try {
+            status = Optional.ofNullable(dto.getStatus()).filter(s -> !s.isBlank())
+                .map(s -> UserStatus.valueOf(s.toUpperCase()))
+                .orElse(UserStatus.ACTIVE);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
         }
 
-        UserAccount saved = userRepo.save(toEntity(dto, targetRole, status));
-        return toDTO(saved);
+        // 4. LƯU USER
+        UserAccount userToSave = toEntity(dto, targetRole, status);
+        UserAccount savedUser = userRepo.save(userToSave);
+
+        // 5. LƯU LIBRARY CARD (Bắt buộc)
+        if (dto.getLibraryCard() == null) {
+            throw new IllegalArgumentException("Thông tin thẻ thư viện không được để trống."); 
+        }
+        
+        LibraryCard cardToSave = toLibraryCardEntity(dto.getLibraryCard());
+        
+        // GÁN CARD NUMBER TỰ ĐỘNG VÀ ĐẢM BẢO DUY NHẤT
+        cardToSave.setCardNumber(generateUniqueCardNumber()); 
+        
+        cardToSave.setUser(savedUser); // Liên kết khóa ngoại
+        
+        // Gán giá trị mặc định cho startDate nếu Frontend bỏ trống
+        if (cardToSave.getStartDate() == null) {
+            cardToSave.setStartDate(LocalDate.now());
+        }
+
+        // ✨ LOGIC TỰ ĐỘNG GÁN END DATE (1 năm) CHO CREATE ✨
+        if (cardToSave.getEndDate() == null) {
+            cardToSave.setEndDate(cardToSave.getStartDate().plusYears(1)); 
+        }
+        
+        cardRepo.save(cardToSave);
+
+        return toDTO(savedUser);
     }
 
     @Override
@@ -131,30 +212,78 @@ public class UserAccountService implements IUserAccountService {
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setAvatarUrl(dto.getAvatarUrl());
 
-        // Cập nhật ROLE (Chỉ khi DTO có cung cấp roleName mới)
-        if (dto.getRoleName() != null && !dto.getRoleName().isBlank()) {
-             // Thêm check khác role để tránh gọi DB/tìm kiếm role nếu role không đổi
-             if (user.getRole() == null || !dto.getRoleName().equals(user.getRole().getRoleName())) {
-                Role newRole = roleRepo.findByRoleName(dto.getRoleName())
-                    .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
-                user.setRole(newRole);
-             }
+        // Cập nhật ROLE
+        if (dto.getRoleName() != null && !dto.getRoleName().isBlank() && 
+            (user.getRole() == null || !dto.getRoleName().equals(user.getRole().getRoleName()))) {
+            
+            Role newRole = roleRepo.findByRoleName(dto.getRoleName())
+                .orElseThrow(() -> new IllegalArgumentException("Vai trò '" + dto.getRoleName() + "' không tồn tại."));
+            user.setRole(newRole);
         }
 
-        // Cập nhật STATUS (Chỉ khi DTO có cung cấp status mới)
-        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
-             // Thêm check khác status để tránh gọi ENUM.valueOf nếu status không đổi
-             if (user.getStatus() == null || !dto.getStatus().equals(user.getStatus().name())) {
-                 try {
-                     UserStatus newStatus = UserStatus.valueOf(dto.getStatus().toUpperCase());
-                     user.setStatus(newStatus);
-                 } catch (IllegalArgumentException e) {
-                     throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
-                 }
-             }
+        // Cập nhật STATUS
+        if (dto.getStatus() != null && !dto.getStatus().isBlank() &&
+            (user.getStatus() == null || !user.getStatus().name().equalsIgnoreCase(dto.getStatus()))) { 
+            try {
+                UserStatus newStatus = UserStatus.valueOf(dto.getStatus().toUpperCase());
+                user.setStatus(newStatus);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Trạng thái '" + dto.getStatus() + "' không hợp lệ.");
+            }
+        }
+        
+        // Cập nhật LIBRARY CARD
+        if (dto.getLibraryCard() != null) {
+            LibraryCard existingCard = cardRepo.findByUser_UserId(id)
+                                             .orElseGet(LibraryCard::new); 
+            
+            LibraryCardDTO cardDto = dto.getLibraryCard();
+
+            // 1. Kiểm tra ràng buộc DUY NHẤT cho CardNumber
+            String newCardNumber = cardDto.getCardNumber();
+            String currentCardNumber = existingCard.getCardNumber();
+
+            if (newCardNumber != null && !newCardNumber.equals(currentCardNumber)) {
+                if (cardRepo.existsByCardNumber(newCardNumber)) {
+                    throw new IllegalArgumentException("Số thẻ '" + newCardNumber + "' đã được gán cho người dùng khác.");
+                }
+                existingCard.setCardNumber(newCardNumber);
+            } else if (newCardNumber == null && existingCard.getCardNumber() == null) {
+                 existingCard.setCardNumber(generateUniqueCardNumber());
+            }
+
+            // 2. Cập nhật các trường ngày tháng và Status
+            
+            // Lấy StartDate mới từ DTO hoặc giữ nguyên giá trị cũ
+            LocalDate newStartDate = cardDto.getStartDate() != null ? cardDto.getStartDate() : existingCard.getStartDate();
+            
+            // Đảm bảo newStartDate không null
+            if (newStartDate == null) {
+                newStartDate = LocalDate.now();
+            }
+            existingCard.setStartDate(newStartDate);
+            
+            // ✨ LOGIC TỰ ĐỘNG GÁN END DATE (1 năm) CHO UPDATE (ĐÃ XÓA LỖI VALIDATION THỦ CÔNG) ✨
+            if (cardDto.getEndDate() == null) {
+                // Nếu Frontend KHÔNG gửi EndDate (người dùng bỏ trống), tự động tính 1 năm từ StartDate
+                existingCard.setEndDate(newStartDate.plusYears(1)); 
+            } else {
+                // Nếu Frontend gửi EndDate lên (người dùng cố ý nhập), sử dụng giá trị đó
+                existingCard.setEndDate(cardDto.getEndDate());
+            }
+
+            existingCard.setNotes(cardDto.getNotes());
+            
+            // Cập nhật Status
+            if (cardDto.getStatus() != null && !cardDto.getStatus().isBlank()) {
+                existingCard.setStatus(LibraryCardStatus.valueOf(cardDto.getStatus().toUpperCase()));
+            }
+
+            existingCard.setUser(user); 
+            cardRepo.save(existingCard);
         }
 
-        // Nếu user nhập mật khẩu mới → cập nhật
+        // Cập nhật mật khẩu nếu có nhập
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             user.setPasswordHash(encoder.encode(dto.getPassword()));
         }
@@ -164,29 +293,24 @@ public class UserAccountService implements IUserAccountService {
     }
 
     @Override
-public void deleteUser(Long id) {
-    if (!userRepo.existsById(id)) {
-        throw new IllegalArgumentException("Không tìm thấy người dùng để xóa");
+    @Transactional
+    public void deleteUser(Long id) {
+        if (!userRepo.existsById(id)) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng để xóa");
+        }
+        
+        cardRepo.deleteByUser_UserId(id); 
+        
+        try {
+            userRepo.deleteById(id);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new IllegalStateException("Không thể xóa thành viên vì thành viên này đang có các giao dịch liên quan (mượn/trả sách) chưa được xử lý.");
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi không xác định khi xóa User ID " + id + ": " + e.getMessage());
+        }
     }
-    
-    // ⭐️ BƯỚC CẢI TIẾN: Xử lý Lỗi Ràng buộc Khóa Ngoại tại đây (Tùy chọn)
-    // Nếu UserAccount có liên quan tới các giao dịch (ví dụ: BookLending),
-    // bạn phải xóa các giao dịch đó trước nếu không dùng ON DELETE CASCADE.
-    // Ví dụ: 
-    // lendingRepo.deleteByUserId(id); 
-    
-    try {
-        userRepo.deleteById(id);
-    } catch (org.springframework.dao.DataIntegrityViolationException e) {
-        // Log lỗi chi tiết nếu bạn muốn
-        // log.error("Lỗi ràng buộc khi xóa User ID {}: {}", id, e.getMessage()); 
-        throw new IllegalStateException("Không thể xóa thành viên vì thành viên này đang có các giao dịch liên quan (mượn/trả sách). Vui lòng xử lý các giao dịch trước.");
-    } catch (Exception e) {
-         // Xử lý các lỗi khác
-         throw new RuntimeException("Lỗi không xác định khi xóa User ID " + id + ": " + e.getMessage());
-    }
-}
 
+    // Các phương thức khác giữ nguyên
     @Override
     public void changePassword(String username, ChangePasswordRequest req) {
         UserAccount user = userRepo.findByUsername(username)
