@@ -5,9 +5,11 @@ import com.example.library.security.LibraryUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,38 +26,21 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
     private final LibraryUserDetailsService userDetailsService;
 
-//     @Bean
-//     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//         http
-//                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
-// //                                .requestMatchers("/", "/auth/**", "/error",
-// //                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
-// //                .anyRequest().authenticated()
-//                 )
-//                 .sessionManagement(session -> session
-//                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                 )
-//                 .authenticationProvider(authProvider())
-//                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-//         return http.build();
-//     }
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/auth/**", "/error",
-                             "/css/**", "/js/**", "/images/**", "/assets/**", "/users/**").permitAll()
-            .anyRequest().permitAll()
-        )
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
-        .authenticationProvider(authProvider())
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-}
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
+//                                .requestMatchers("/", "/auth/**", "/error",
+//                                        "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+//                .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authenticationProvider(authProvider())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
 
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 

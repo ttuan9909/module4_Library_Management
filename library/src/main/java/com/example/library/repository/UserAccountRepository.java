@@ -1,28 +1,59 @@
 package com.example.library.repository;
 
 import com.example.library.entity.UserAccount;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // 👈 NHỚ IMPORT
-import java.util.List; // 👈 NHỚ IMPORT
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository cho entity {@link UserAccount}.
+ * Cung cấp các phương thức CRUD và truy vấn tùy chỉnh.
+ */
+@Repository
 public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
 
-    // ⭐️ BẢN SỬA CHỮA: Phương thức buộc nạp Role để tránh LazyInitializationException
-    @Query("SELECT u FROM UserAccount u LEFT JOIN FETCH u.role")
-    List<UserAccount> findAllWithRole(); 
-    
-    // Các phương thức cũ giữ nguyên
+    /**
+     * Tìm tất cả UserAccount cùng với Role (tránh LazyInitializationException).
+     * Sử dụng @EntityGraph thay vì @Query để tối ưu và sạch hơn.
+     */
+    @EntityGraph(attributePaths = "role")
+    List<UserAccount> findAll();
+
+    /**
+     * Tìm UserAccount theo username.
+     */
     Optional<UserAccount> findByUsername(String username);
+
+    /**
+     * Kiểm tra email đã tồn tại chưa.
+     */
     boolean existsByEmail(String email);
+
+    /**
+     * Kiểm tra số điện thoại đã tồn tại chưa.
+     */
     boolean existsByPhoneNumber(String phoneNumber);
+
+    /**
+     * Kiểm tra username đã tồn tại chưa.
+     */
     boolean existsByUsername(String username);
+
+    /**
+     * Tìm UserAccount theo userId, phoneNumber hoặc email (dùng cho tìm kiếm linh hoạt).
+     */
     UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email);
 
-    Optional<Object> findByEmail(@Email(message = "Email không hợp lệ") String email);
+    /**
+     * Tìm UserAccount theo email.
+     */
+    Optional<UserAccount> findByEmail(String email);
 
-    Optional<Object> findByPhoneNumber(@Pattern(regexp = "^\\d{10,11}$", message = "Số điện thoại phải có 10–11 chữ số") String phoneNumber);
-    
+    /**
+     * Tìm UserAccount theo số điện thoại.
+     */
+    Optional<UserAccount> findByPhoneNumber(String phoneNumber);
 }

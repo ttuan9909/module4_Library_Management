@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đang mượn</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}"/>
+
+    <!-- Fonts / Icons -->
+    <link rel="stylesheet" th:href="@{/css/font-awesome.min.css}"/>
+
+    <!-- Animation -->
+    <link rel="stylesheet" th:href="@{/css/aos.css}"/>
+
+    <!-- Mobile Menu -->
+    <link rel="stylesheet" th:href="@{/css/mmenu.css}"/>
+    <link rel="stylesheet" th:href="@{/css/mmenu.positioning.css}"/>
+
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+
+</head>
+<body>
+
+<!-- ======= HEADER & NAVBAR ======= -->
+<header id="header" class="inner-navbar-wrapper navbar-wrapper">
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <!-- Logo -->
+            <a class="navbar-brand" th:href="@{/}">
+                <img th:src="@{/images/logo-header-v1.png}" alt="Skille"/>
+            </a>
+
+            <!-- Ô search -->
+            <div class="inner-header-search d-none d-md-flex ms-3">
+                <input class="form-control" type="text" placeholder="Search Anything">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </div>
+
+            <!-- Toggle button (mobile) -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menu -->
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="nav navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/books}">Books &amp; Media</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/news}">News &amp; Events</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/pages}">Pages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/blog}">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/contact}">Contact</a>
+                    </li>
+                </ul>
+
+                <!-- Auth area -->
+                <div class="header-login-btn ml-3 d-flex align-items-center">
+                    <!-- Chưa đăng nhập -->
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/auth/login}" class="btn btn-light mr-2">
+                            <i class="fa fa-user"></i> Login
+                        </a>
+                        <a th:href="@{/auth/register}" class="btn btn-light">
+                            Register
+                        </a>
+                    </div>
+
+                    <!-- Đã đăng nhập -->
+                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center">
+                        <span class="mr-3">
+                            <i class="fa fa-user"></i>
+                            <strong sec:authentication="name">user</strong>
+                        </span>
+                        <a th:href="@{/account}" class="btn btn-light mr-2">My account</a>
+                        <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-light">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+<!-- ======= END HEADER ======= -->
+
+<section class="inner-page-banner">
+    <div class="container">
+        <div class="banner-header text-center">
+            <h2 th:text="${pageTitle != null ? pageTitle : 'Danh sách đang mượn'}">Danh sách đang mượn</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"
+                        th:text="${breadcrumb != null ? breadcrumb : 'Đang mượn'}">Đang mượn</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<!-- ======= PAGE CONTENT ======= -->
+<div class="container mt-4">
+    <h2>Danh sách sách đang mượn</h2>
+
+    <table border="1" cellpadding="6" cellspacing="0" class="table table-striped mt-3">
+        <thead class="table-light">
+        <tr>
+            <th>Mã phiếu</th>
+            <th>Tên tài liệu</th>
+            <th>Ngày mượn</th>
+            <th>Hạn trả</th>
+            <th>Trạng thái</th>
+            <th>Phí phạt (tính đến hôm nay)</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="row : ${borrowings}">
+            <td th:text="${row.ticket.ticketNumber}">BT-001</td>
+            <td th:text="${row.ticket.publication != null && row.ticket.publication.book != null
+                  ? row.ticket.publication.book.title
+                  : 'N/A'}">Tên sách</td>
+            <td th:text="${#temporals.format(row.ticket.borrowDate, 'yyyy-MM-dd HH:mm')}">2025-11-03</td>
+            <td th:text="${row.ticket.dueDate}">2025-11-10</td>
+            <td th:text="${row.ticket.status}">Borrowing</td>
+            <td th:text="${row.fine}">0</td>
+
+            <!-- Form gia hạn -->
+            <td>
+                <form th:action="@{|/account/borrowings/${row.ticket.borrowId}/renew|}" method="post" class="d-flex flex-column">
+                    <label>Gia hạn đến:
+                        <input type="date" name="newDueDate" required class="form-control form-control-sm mb-1"/>
+                    </label>
+                    <input type="text" name="notes" placeholder="Ghi chú (nếu có)" class="form-control form-control-sm mb-1"/>
+                    <button type="submit" class="btn btn-primary btn-sm">Gửi yêu cầu</button>
+                </form>
+            </td>
+        </tr>
+
+        <tr th:if="${#lists.isEmpty(borrowings)}">
+            <td colspan="7" class="text-center">Hiện bạn không có cuốn nào đang mượn.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Thông báo -->
+    <div th:if="${success}" class="alert alert-success mt-3" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger mt-3" th:text="${error}"></div>
+</div>
+<!-- ======= END PAGE CONTENT ======= -->
+
+</body>
+</html>
