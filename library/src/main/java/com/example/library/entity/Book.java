@@ -40,4 +40,10 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 12)
     private BookStatus status = BookStatus.Available;
+
+    @Column(name = "available_quantity", nullable = false)
+    private Integer availableQuantity = 0;
+
+    @Column(name = "total_quantity", nullable = false)
+    private Integer totalQuantity = 0; // THÊM DÒNG NÀY
 }

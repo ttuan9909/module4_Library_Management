@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Danh sách Sách</h2>
+
+    <div class="text-end mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="resetForm()">
+            <i class="bi bi-plus-circle"></i> Thêm Sách
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover bg-white shadow-sm">
+            <thead class="table-secondary">
+            <tr>
+                <th>ID</th>
+                <th>Tiêu đề</th>
+                <th>Tác giả</th>
+                <th>Thể loại</th>
+                <th>Nhà XB</th>
+                <th>Năm XB</th>
+                <th>Ngôn ngữ</th>
+                <th>Số lượng có sẵn</th>
+                <th>Tổng số lượng</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody id="bookTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitle">Thêm Sách</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bookForm">
+                    <input type="hidden" id="bookId">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tên sách <span class="text-danger">*</span></label>
+                            <input type="text" id="title" class="form-control" required maxlength="255" placeholder="Nhập tiêu đề sách">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tác giả</label>
+                            <input type="text" id="authorName" class="form-control" placeholder="Tùy chọn, nếu chưa có sẽ tự thêm">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Thể loại <span class="text-danger">*</span></label>
+                            <select id="categorySelect" class="form-select" required>
+                                <option value="">-- Chọn thể loại --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nhà xuất bản <span class="text-danger">*</span></label>
+                            <input type="text" id="publisher" class="form-control" required maxlength="150" placeholder="VD: Kim Đồng">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Năm xuất bản <span class="text-danger">*</span></label>
+                            <input type="number" id="publishYear" class="form-control" min="1800" max="2100" required placeholder="2025">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ngôn ngữ <span class="text-danger">*</span></label>
+                            <input type="text" id="language" class="form-control" style="text-transform: uppercase;" maxlength="3" required placeholder="ENG">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Trạng thái</label>
+                            <select id="status" class="form-select">
+                                <option value="Available">Còn hàng</option>
+                                <option value="Discontinued">Ngừng phát hành</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Số lượng có sẵn <span class="text-danger">*</span></label>
+                            <input type="number" id="availableQuantity" class="form-control" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tổng số lượng <span class="text-danger">*</span></label>
+                            <input type="number" id="totalQuantity" class="form-control" min="0" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea id="description" rows="3" class="form-control" maxlength="2000" placeholder="Mô tả ngắn gọn về sách..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Đóng
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveBook()">
+                    <i class="bi bi-check-circle"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Load danh sách thể loại
+    function loadCategories() {
+        $.ajax({
+            url: '/admin/books/categories',
+            type: 'GET',
+            success: function (data) {
+                let options = '<option value="">-- Chọn thể loại --</option>';
+                data.forEach(c => {
+                    options += `<option value="${c.categoryName}">${c.categoryName}</option>`;
+                });
+                $("#categorySelect").html(options);
+            },
+            error: function () {
+                alert("Không thể tải danh sách thể loại!");
+            }
+        });
+    }
+
+    // Load danh sách sách
+    function loadBooks() {
+        $.ajax({
+            url: '/admin/books/list',
+            type: 'GET',
+            success: function (data) {
+                let rows = '';
+                data.forEach(b => {
+                    const statusText = b.status === 'Available' ? 'Còn hàng' : 'Ngừng phát hành';
+                    const badgeClass = b.status === 'Available' ? 'success' : 'secondary';
+                    const availableQty = b.availableQuantity != null ? b.availableQuantity : 0;
+                    const totalQty = b.totalQuantity != null ? b.totalQuantity : 0;
+
+                    rows += `
+                        <tr>
+                            <td>${b.bookId}</td>
+                            <td>${escapeHtml(b.title)}</td>
+                            <td>${b.author?.authorName || '<em class="text-muted">Không có</em>'}</td>
+                            <td>${b.category?.categoryName || ''}</td>
+                            <td>${b.publisher || ''}</td>
+                            <td>${b.publishYear || ''}</td>
+                            <td>${b.language || ''}</td>
+                            <td><strong>${availableQty}</strong></td>
+                            <td><strong>${totalQty}</strong></td>
+                            <td><span class="badge bg-${badgeClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editBook(${b.bookId})" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBook(${b.bookId})" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                $("#bookTableBody").html(rows);
+            },
+            error: function () {
+                alert("Lỗi tải danh sách sách!");
+            }
+        });
+    }
+
+    // Reset form
+    function resetForm() {
+        $("#bookForm")[0].reset();
+        $("#bookId").val('');
+        $("#modalTitle").text("Thêm Sách");
+        $("#categorySelect").val('');
+        $("#status").val('Available');
+        $("#availableQuantity").val('0');
+        $("#totalQuantity").val('0');
+    }
+
+    // Lưu sách
+    function saveBook() {
+        const title = $("#title").val().trim();
+        const publisher = $("#publisher").val().trim();
+        const publishYear = $("#publishYear").val();
+        const language = $("#language").val().trim().toUpperCase();
+        const categoryName = $("#categorySelect").val();
+        const availableQuantity = parseInt($("#availableQuantity").val()) || 0;
+        const totalQuantity = parseInt($("#totalQuantity").val()) || 0;
+
+        // Validate
+        if (!title || !publisher || !publishYear || !language || !categoryName) {
+            alert("Vui lòng điền đầy đủ các trường bắt buộc (*)");
+            return;
+        }
+        if (publishYear < 1800 || publishYear > 2100) {
+            alert("Năm xuất bản phải từ 1800 đến 2100!");
+            return;
+        }
+        if (!/^[A-Z]{3}$/.test(language)) {
+            alert("Ngôn ngữ phải là 3 chữ cái in hoa (VD: ENG, VIE)!");
+            return;
+        }
+        if (availableQuantity < 0 || totalQuantity < 0) {
+            alert("Số lượng phải ≥ 0!");
+            return;
+        }
+
+        const id = $("#bookId").val();
+        const authorName = $("#authorName").val().trim();
+
+        const dto = {
+            title: title,
+            publisher: publisher,
+            publishYear: parseInt(publishYear),
+            language: language,
+            description: $("#description").val().trim(),
+            status: $("#status").val(),
+            availableQuantity: availableQuantity,
+            totalQuantity: totalQuantity,
+            category: { categoryName: categoryName },
+            author: authorName ? { authorName: authorName } : null
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/admin/books/${id}` : '/admin/books';
+
+        $.ajax({
+            url: url,
+            type: method,
+            contentType: 'application/json',
+            data: JSON.stringify(dto),
+            success: function () {
+                $('#bookModal').modal('hide');
+                loadBooks();
+                alert(id ? "Cập nhật thành công!" : "Thêm sách thành công!");
+            },
+            error: function (xhr) {
+                let msg = "Lỗi:\n";
+                const errors = xhr.responseJSON;
+                if (errors && typeof errors === 'object') {
+                    for (let field in errors) {
+                        msg += `• ${errors[field]}\n`;
+                    }
+                } else {
+                    msg += xhr.responseText || "Lỗi không xác định";
+                }
+                alert(msg);
+            }
+        });
+    }
+
+    // Sửa sách
+    function editBook(id) {
+        $.ajax({
+            url: `/admin/books/${id}`,
+            type: 'GET',
+            success: function (b) {
+                $("#bookId").val(b.bookId);
+                $("#title").val(b.title);
+                $("#authorName").val(b.author?.authorName || '');
+                $("#categorySelect").val(b.category?.categoryName || '');
+                $("#publisher").val(b.publisher);
+                $("#publishYear").val(b.publishYear);
+                $("#language").val(b.language);
+                $("#description").val(b.description || '');
+                $("#status").val(b.status);
+                $("#availableQuantity").val(b.availableQuantity != null ? b.availableQuantity : 0);
+                $("#totalQuantity").val(b.totalQuantity != null ? b.totalQuantity : 0);
+                $("#modalTitle").text("Sửa Sách");
+                new bootstrap.Modal(document.getElementById('bookModal')).show();
+            },
+            error: function () {
+                alert("Không tìm thấy sách!");
+            }
+        });
+    }
+
+    // Xóa sách
+    function deleteBook(id) {
+        if (!confirm("Bạn có chắc muốn xóa sách này?")) return;
+        $.ajax({
+            url: `/admin/books/${id}`,
+            type: 'DELETE',
+            success: function () {
+                loadBooks();
+                alert("Xóa thành công!");
+            },
+            error: function () {
+                alert("Xóa thất bại!");
+            }
+        });
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Khởi động
+    $(document).ready(function () {
+        loadCategories();
+        loadBooks();
+    });
+</script>
+</body>
+</html>
