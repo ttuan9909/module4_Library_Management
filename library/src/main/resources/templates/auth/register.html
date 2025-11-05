@@ -42,129 +42,36 @@
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="nav navbar-nav ml-auto">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" th:href="@{/}" data-toggle="dropdown" aria-expanded="false">Home</a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/}">Home V1</a></li>
-              <li><a th:href="@{/home-v2}">Home V2</a></li>
-              <li><a th:href="@{/home-v3}">Home V3</a></li>
-            </ul>
+          <li class="nav-item">
+            <a class="nav-link " th:href="@{/}" data-toggle="dropdown" aria-expanded="false">Home</a>
           </li>
 
           <li class="nav-item dropdown">
             <a data-toggle="dropdown" aria-expanded="false" class="nav-link dropdown-toggle" th:href="@{/books-media-list-view}">
               Books &amp; Media
             </a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/books-media-list-view}">Books &amp; Media List View</a></li>
-              <li><a th:href="@{/books-media-gird-view}">Books &amp; Media Grid View</a></li>
-              <li><a th:href="@{/books-media-v3}">Books &amp; Media V3</a></li>
-              <li><a th:href="@{/books-media-detail-v1}">Books &amp; Media Detail V1</a></li>
-              <li><a th:href="@{/books-media-detail-v2}">Books &amp; Media Detail V2</a></li>
-              <li><a th:href="@{/books-media-detail-v3}">Books &amp; Media Detail V3</a></li>
-            </ul>
           </li>
 
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">News &amp; Events</a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/news-events-list-view}">News &amp; Events List View</a></li>
-              <li><a th:href="@{/news-events-detail}">News &amp; Events Detail</a></li>
-            </ul>
           </li>
 
           <li class="nav-item dropdown">
             <a class="active nav-link dropdown-toggle" href="#" data-toggle="dropdown">Pages</a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/about-us}">About Us</a></li>
-              <li><a th:href="@{/cart}">Cart</a></li>
-              <li><a th:href="@{/wishlist}">Wishlist</a></li>
-              <li><a th:href="@{/checkout}">Checkout</a></li>
-              <li><a th:href="@{/signup}">Signup/Register</a></li>
-              <li><a th:href="@{/signin}">Signin</a></li>
-              <li><a th:href="@{/404}">404/Error</a></li>
-            </ul>
           </li>
 
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Blog</a>
-            <ul class="dropdown-menu">
-              <li><a th:href="@{/blog-list}">Blog List View</a></li>
-              <li><a th:href="@{/blog-grid}">Blog Grid View</a></li>
-              <li><a th:href="@{/blog-detail}">Blog Detail</a></li>
-            </ul>
           </li>
 
           <li class="nav-item"><a class="nav-link" th:href="@{/contact}">Contact</a></li>
         </ul>
 
         <div class="header-login-btn">
-          <a th:href="@{/signin}" class="btn btn-light"><i class="fa fa-user"></i> Login</a>
-          <a th:href="@{/cart}" class="btn btn-light"><i class="fa fa-cart-plus"></i> Cart</a>
+          <a th:href="@{/auth/login}" class="btn btn-light"><i class="fa fa-user"></i> Login</a>
         </div>
       </div>
     </nav>
-
-    <!-- Mobile Navigation-->
-    <div class="mobile-menu d-lg-none">
-      <a href="#mobile-menu"><i class="fa fa-navicon"></i></a>
-      <div id="mobile-menu">
-        <ul>
-          <li class="mobile-title">
-            <h4>Navigation</h4>
-            <a href="#" class="close"></a>
-          </li>
-          <li>
-            <a th:href="@{/}">Home</a>
-            <ul>
-              <li><a th:href="@{/}">Home V1</a></li>
-              <li><a th:href="@{/home-v2}">Home V2</a></li>
-              <li><a th:href="@{/home-v3}">Home V3</a></li>
-            </ul>
-          </li>
-          <li>
-            <a th:href="@{/books-media-list-view}">Books &amp; Media</a>
-            <ul>
-              <li><a th:href="@{/books-media-list-view}">Books &amp; Media List View</a></li>
-              <li><a th:href="@{/books-media-gird-view}">Books &amp; Media Grid View</a></li>
-              <li><a th:href="@{/books-media-v3}">Books &amp; Media V3</a></li>
-              <li><a th:href="@{/books-media-detail-v1}">Books &amp; Media Detail V1</a></li>
-              <li><a th:href="@{/books-media-detail-v2}">Books &amp; Media Detail V2</a></li>
-              <li><a th:href="@{/books-media-detail-v3}">Books &amp; Media Detail V3</a></li>
-            </ul>
-          </li>
-          <li>
-            <a th:href="@{/news-events-list-view}">News &amp; Events</a>
-            <ul>
-              <li><a th:href="@{/news-events-list-view}">News &amp; Events List View</a></li>
-              <li><a th:href="@{/news-events-detail}">News &amp; Events Detail</a></li>
-            </ul>
-          </li>
-          <li>
-            <a href="#">Pages</a>
-            <ul>
-              <li><a th:href="@{/about-us}">About Us</a></li>
-              <li><a th:href="@{/cart}">Cart</a></li>
-              <li><a th:href="@{/wishlist}">Wishlist</a></li>
-              <li><a th:href="@{/checkout}">Checkout</a></li>
-              <li><a th:href="@{/signup}">SignUp/Register</a></li>
-              <li><a th:href="@{/signin}">SignIn</a></li>
-              <li><a th:href="@{/404}">404/Error</a></li>
-            </ul>
-          </li>
-          <li>
-            <a th:href="@{/blog-list}">Blog</a>
-            <ul>
-              <li><a th:href="@{/blog-list}">Blog List View</a></li>
-              <li><a th:href="@{/blog-grid}">Blog Grid View</a></li>
-              <li><a th:href="@{/blog-detail}">Blog Detail</a></li>
-            </ul>
-          </li>
-          <li><a th:href="@{/contact}">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-    <!-- Mobile Navigation End-->
   </div>
 </header>
 

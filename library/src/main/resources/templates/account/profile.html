@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="_csrf" th:if="${_csrf}" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:if="${_csrf}" th:content="${_csrf.headerName}">
+    <title>Tài khoản của tôi</title>
+
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body { background-color: #f5f5f5; }
+        .page-title { font-weight: 700; }
+        .avatar-preview { width: 120px; height: 120px; border-radius: 100px; object-fit: cover; border: 1px solid #ddd; }
+        .form-section { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 6px 14px rgba(0,0,0,.06); }
+        .form-label.required::after { content: " *"; color: #dc3545; }
+        .alert-position { position: sticky; top: 0; z-index: 1020; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header id="header" class="inner-navbar-wrapper navbar-wrapper">
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" th:href="@{/}">
+                <img th:src="@{/images/logo-header-v1.png}" alt="Skille"/>
+            </a>
+
+            <div class="inner-header-search d-none d-md-flex ms-3">
+                <input class="form-control" type="text" placeholder="Search Anything">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="nav navbar-nav ml-auto">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/books}">Books &amp; Media</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/news}">News &amp; Events</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/pages}">Pages</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/contact}">Contact</a></li>
+                </ul>
+
+                <div class="header-login-btn ml-3 d-flex align-items-center">
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/auth/login}" class="btn btn-light mr-2">
+                            <i class="fa fa-user"></i> Login
+                        </a>
+                        <a th:href="@{/auth/register}" class="btn btn-light">Register</a>
+                    </div>
+                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center">
+                        <span class="mr-3">
+                            <i class="fa fa-user"></i>
+                            <strong sec:authentication="name">user</strong>
+                        </span>
+                        <a th:href="@{/account}" class="btn btn-light mr-2">My account</a>
+                        <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-light">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- BREADCRUMB -->
+<section class="inner-page-banner">
+    <div class="container">
+        <div class="banner-header text-center">
+            <h2>Tài khoản</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Tài khoản</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<!-- CONTENT -->
+<div class="container py-4">
+    <div id="globalAlert" class="alert alert-position d-none" role="alert"></div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-8 mb-3">
+            <div class="form-section">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0">Thông tin cá nhân</h5>
+                    <div>
+                        <span class="text-muted me-2">Xin chào,</span>
+                        <strong sec:authentication="name">user</strong>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 d-flex align-items-center gap-3">
+                        <img id="avatarPreview" class="avatar-preview me-3"
+                             th:src="@{/images/avatar-default.png}" alt="avatar">
+                        <div class="flex-grow-1">
+                            <label class="form-label">Ảnh đại diện</label>
+                            <input id="avatarFile" type="file" accept="image/*" class="form-control mb-2">
+                            <input id="avatarUrl" type="hidden">
+                            <small class="text-muted">Chọn ảnh, hệ thống sẽ tự upload và hiển thị link.</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label required">Họ tên</label>
+                        <input id="fullName" type="text" class="form-control" placeholder="Nguyễn Văn A" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Số điện thoại</label>
+                        <input id="phone" type="text" class="form-control" placeholder="09xx...">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input id="email" type="email" class="form-control" placeholder="you@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Ngày sinh</label>
+                        <input id="dob" type="date" class="form-control">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Địa chỉ</label>
+                        <textarea id="address" class="form-control" rows="2"
+                                  placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <button id="btnSaveProfile" class="btn btn-primary">
+                            Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- đổi mật khẩu -->
+        <div class="col-lg-4 mb-3">
+            <div class="form-section">
+                <h6 class="mb-3">Đổi mật khẩu</h6>
+                <div class="mb-3">
+                    <label class="form-label required">Mật khẩu hiện tại</label>
+                    <input id="curPwd" type="password" class="form-control" placeholder="••••••" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">Mật khẩu mới</label>
+                    <input id="newPwd" type="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">Nhập lại mật khẩu mới</label>
+                    <input id="reNewPwd" type="password" class="form-control" placeholder="Nhập lại để xác nhận" required>
+                </div>
+                <button id="btnChangePwd" class="btn btn-outline-primary w-100">Đổi mật khẩu</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JS -->
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+<script>
+    // Lấy CSRF từ meta để dùng cho mọi AJAX
+    const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    if (typeof $ !== 'undefined') {
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                if (CSRF_TOKEN && CSRF_HEADER) {
+                    xhr.setRequestHeader(CSRF_HEADER, CSRF_TOKEN);
+                }
+            }
+        });
+    }
+
+    function showAlert(message, type = 'success', timeout = 3000) {
+        const box = document.getElementById('globalAlert');
+        box.className = 'alert alert-' + type;
+        box.textContent = message;
+        box.classList.remove('d-none');
+        if (timeout) {
+            setTimeout(() => box.classList.add('d-none'), timeout);
+        }
+    }
+
+    function setValue(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.value = (val ?? '');
+    }
+
+    function toIsoDateOnly(value) {
+        try {
+            if (!value) return '';
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return value;
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            return `${yyyy}-${mm}-${dd}`;
+        } catch { return ''; }
+    }
+
+    // ===== load profile =====
+    function loadMe() {
+        $.ajax({
+            url: '/api/users/me',
+            method: 'GET',
+            xhrFields: { withCredentials: true },
+            success: function(me) {
+                // avatar
+                $('#avatarPreview').attr('src', me.avatarUrl || '/images/avatar-default.png');
+                $('#avatarUrl').val(me.avatarUrl || '');
+                $('#fullName').val(me.fullName || '');
+                $('#phone').val(me.phoneNumber || '');
+                $('#email').val(me.email || '');
+                $('#address').val(me.address || '');
+                $('#dob').val(toIsoDateOnly(me.dateOfBirth));
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    showAlert('Vui lòng đăng nhập lại.', 'warning', 5000);
+                } else {
+                    showAlert('Không tải được hồ sơ (' + xhr.status + ')', 'danger');
+                }
+            }
+        });
+    }
+
+    // ===== avatar url nhập tay =====
+    function wireAvatarPreview() {
+        $('#avatarUrl').on('input', function() {
+            const v = $(this).val().trim();
+            if (v) {
+                $('#avatarPreview').attr('src', v);
+            }
+        });
+    }
+
+    // ===== upload avatar =====
+    function wireAvatarUpload() {
+        $('#avatarFile').on('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            $.ajax({
+                url: '/uploads/avatar',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data && data.url) {
+                        $('#avatarUrl').val(data.url);
+                        $('#avatarPreview').attr('src', data.url);
+                        showAlert('Tải ảnh thành công!');
+                    } else {
+                        showAlert('Upload lỗi: dữ liệu không đúng', 'danger');
+                    }
+                },
+                error: function(xhr) {
+                    showAlert('Upload lỗi: ' + xhr.status, 'danger');
+                }
+            });
+        });
+    }
+
+    // ===== save profile =====
+    function saveProfile() {
+        const payload = {
+            fullName: $('#fullName').val()?.trim(),
+            email: $('#email').val()?.trim(),
+            phoneNumber: $('#phone').val()?.trim(),
+            address: $('#address').val()?.trim(),
+            dateOfBirth: $('#dob').val() || null,
+            avatarUrl: $('#avatarUrl').val()?.trim()
+        };
+
+        $.ajax({
+            url: '/api/users/me',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            xhrFields: { withCredentials: true },
+            success: function(res) {
+                showAlert('Cập nhật hồ sơ thành công!');
+                if (res && res.avatarUrl) {
+                    $('#avatarPreview').attr('src', res.avatarUrl);
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Lỗi cập nhật: ' + xhr.status;
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = 'Lỗi cập nhật: ' + xhr.responseJSON.error;
+                }
+                showAlert(msg, 'danger', 6000);
+            }
+        });
+    }
+
+    // ===== change password =====
+    function changePassword() {
+        const cur = $('#curPwd').val();
+        const npw = $('#newPwd').val();
+        const rep = $('#reNewPwd').val();
+
+        if (!cur || !npw) {
+            showAlert('Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.', 'warning'); return;
+        }
+        if (npw !== rep) {
+            showAlert('Mật khẩu mới nhập lại không khớp.', 'warning'); return;
+        }
+
+        $.ajax({
+            url: '/api/users/me/change-password',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ currentPassword: cur, newPassword: npw }),
+            xhrFields: { withCredentials: true },
+            success: function() {
+                showAlert('Đổi mật khẩu thành công!');
+                $('#curPwd').val('');
+                $('#newPwd').val('');
+                $('#reNewPwd').val('');
+            },
+            error: function(xhr) {
+                let msg = 'Đổi mật khẩu thất bại: ' + xhr.status;
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    msg = 'Đổi mật khẩu thất bại: ' + xhr.responseJSON.error;
+                }
+                showAlert(msg, 'danger', 6000);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        wireAvatarPreview();
+        wireAvatarUpload();
+        loadMe();
+
+        $('#btnSaveProfile').on('click', function(e) {
+            e.preventDefault();
+            saveProfile();
+        });
+
+        $('#btnChangePwd').on('click', function(e) {
+            e.preventDefault();
+            changePassword();
+        });
+    });
+</script>
+</body>
+</html>
