@@ -40,4 +40,7 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 12)
     private BookStatus status = BookStatus.Available;
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = true)
+    private Author author;
 }

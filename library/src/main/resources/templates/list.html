@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách thể loại sách</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h2 class="text-center mb-4 text-primary">📚 Danh sách thể loại</h2>
+    <a href="/category/add" class="btn btn-success mb-3">
+        <i class="bi bi-plus-circle"></i> Thêm mới thể loại
+    </a>
+
+    <form th:action="@{/category/list}" method="get" class="d-flex mb-3">
+        <input class="form-control me-2"
+               type="text"
+               name="searchName"
+               placeholder="Nhập tên thể loại..."
+               th:value="${searchName}">
+        <button class="btn btn-primary" type="submit">
+            <i class="bi bi-search"></i> Tìm kiếm
+        </button>
+    </form>
+
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark text-center">
+        <tr>
+            <th>ID</th>
+            <th>Tên thể loại</th>
+            <th>Mô tả</th>
+            <th>Thao Tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="category : ${categoryPage.content}">
+            <td th:text="${category.categoryId}" class="text-center"></td>
+            <td th:text="${category.categoryName}"></td>
+            <td th:text="${category.description}"></td>
+            <td class="text-center">
+                <a th:href="@{/category/delete/{id}(id=${category.categoryId})}"
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirm('Bạn có chắc muốn xóa thể loại này?');">
+                    <i class="bi bi-trash"></i> Xoá
+                </a>
+                <a th:href="@{/category/update/{id}(id=${category.categoryId})}"
+                   class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil-square"></i> Sửa
+                </a>
+            </td>
+        </tr>
+        <tr th:if="${categoryPage.content.isEmpty()}">
+            <td colspan="4" class="text-center text-muted">Không có dữ liệu</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <nav th:if="${categoryPage.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${categoryPage.first}? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/category/list(page=${categoryPage.number - 1}, searchName=${searchName})}">
+                    « Trước
+                </a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, categoryPage.totalPages - 1)}"
+                th:classappend="${i == categoryPage.number}? 'active'">
+                <a class="page-link"
+                   th:text="${i + 1}"
+                   th:href="@{/category/list(page=${i}, searchName=${searchName})}">
+                </a>
+            </li>
+
+            <li class="page-item" th:classappend="${categoryPage.last}? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/category/list(page=${categoryPage.number + 1}, searchName=${searchName})}">
+                    Sau »
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>

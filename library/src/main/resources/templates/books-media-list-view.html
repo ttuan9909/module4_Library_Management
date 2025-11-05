@@ -1,0 +1,55 @@
+<!-- Start: Header Section -->
+<header id="header" class="inner-navbar-wrapper navbar-wrapper">
+    <div class="container-fluid">
+        <!-- Header Main Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="index.html">
+                <img src="images/logo-header-v1.png" alt="Skille" />
+            </a>
+            <div class="inner-header-search">
+                <form th:action="@{/book}" method="get" class="d-flex">
+                    <input class="form-control" type="text" name="q" placeholder="Search Anything" th:value="${keyword}">
+                    <select name="type" class="form-control mx-2">
+                        <option value="title" th:selected="${type == 'title'}">Tên sách</option>
+                        <option value="category" th:selected="${type == 'category'}">Thể loại</option>
+                        <option value="author" th:selected="${type == 'author'}">Tác giả</option>
+                        <option value="year" th:selected="${type == 'year'}">Năm xuất bản</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- Books List -->
+<section id="books-media-list-view" class="books-media-list-view py-5">
+    <div class="container">
+        <div class="row" th:if="${#lists.isEmpty(books)}">
+            <div class="col-12 text-center">
+                <h4>Không tìm thấy sách nào.</h4>
+            </div>
+        </div>
+
+        <div class="row" th:each="book : ${books}">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${book.title}">Tên sách</h5>
+                        <p class="card-text">
+                            <strong>Tác giả:</strong>
+                            <span th:text="${book.author != null ? book.author.authorName : 'Chưa rõ'}">Tác giả</span><br>
+                            <strong>Thể loại:</strong>
+                            <span th:text="${book.category != null ? book.category.categoryName : 'Chưa rõ'}">Thể loại</span><br>
+                            <strong>Năm XB:</strong>
+                            <span th:text="${book.publishYear}">2020</span><br>
+                            <strong>Ngôn ngữ:</strong>
+                            <span th:text="${book.language}">VN</span>
+                        </p>
+                        <a th:href="@{'/book/' + ${book.bookId}}" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
