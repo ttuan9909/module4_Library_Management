@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -30,4 +32,7 @@ public class Author {
     @Lob
     @Column(name = "biography")
     private String biography;
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    private Set<Book> books = new HashSet<>();
+
 }
