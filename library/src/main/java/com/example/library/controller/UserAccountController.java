@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.method.P;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,18 +27,6 @@ public class UserAccountController {
         model.addAttribute("users", userService.getAllUsers());
         return "admin/user/list"; // chỉ còn trang list (modal thêm user nằm trong đây)
     }
-
-    // ✨ PHƯƠNG THỨC MỚI: Xem Chi Tiết theo ID ✨
-//    @GetMapping("/{userId}")
-//    public ResponseEntity<UserAccountDTO> getUserById(@PathVariable("userId") Long userId) {
-//        try {
-//            UserAccountDTO userDTO = userService.getUserById(userId);
-//            return ResponseEntity.ok(userDTO);
-//        } catch (RuntimeException ex) {
-//            // Xử lý nếu không tìm thấy người dùng
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-//        }
-//    }
 
     // ✨ PHƯƠNG THỨC MỚI: Trả về trang View Chi Tiết (detail.html) ✨
     // URL: GET /users/detail/123

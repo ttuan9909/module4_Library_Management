@@ -40,4 +40,5 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 12)
     private BookStatus status = BookStatus.Available;
+    
 }
