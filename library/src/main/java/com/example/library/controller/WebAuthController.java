@@ -20,13 +20,12 @@ import java.time.Duration;
 public class WebAuthController {
     private final AuthService authService;
 
-    // ===== REGISTER =====
     @GetMapping("/register")
     public String registerForm(Model model,
                                @RequestParam(name = "admin", defaultValue = "false") boolean admin) {
         model.addAttribute("registerRequest", new RegisterRequest(null, null, null, null, null));
         model.addAttribute("admin", admin);
-        return "auth/register"; // templates/auth/register.html
+        return "auth/register";
     }
 
     @PostMapping("/register")
@@ -40,10 +39,8 @@ public class WebAuthController {
         }
         try {
             authService.register(req, admin);
-            // Đăng ký xong -> chuyển sang trang login
             return "redirect:/auth/login?registered";
         } catch (IllegalArgumentException ex) {
-            // lỗi trùng username/email, v.v...
             model.addAttribute("admin", admin);
             model.addAttribute("serverError", ex.getMessage());
             return "auth/register";
@@ -54,11 +51,11 @@ public class WebAuthController {
         }
     }
 
-    // ===== LOGIN =====
+
     @GetMapping("/login")
     public String loginForm(Model model) {
         model.addAttribute("loginRequest", new LoginRequest(null, null));
-        return "auth/login"; // templates/auth/login.html
+        return "auth/login";
     }
 
     @PostMapping("/login")
@@ -95,12 +92,11 @@ public class WebAuthController {
         }
     }
 
-    // ===== LOGOUT (xóa cookie) =====
     @PostMapping("/logout")
     public String logout(jakarta.servlet.http.HttpServletResponse resp) {
         ResponseCookie cookie = ResponseCookie.from("LIB_JWT", "")
                 .httpOnly(true).path("/").maxAge(0).sameSite("Lax").build();
         resp.addHeader("Set-Cookie", cookie.toString());
-        return "redirect:/auth/login?logout";
+        return "redirect:/";
     }
 }

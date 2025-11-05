@@ -24,7 +24,7 @@ public class UserAccount {
     @Column(name = "user_id")
     private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false, 
             foreignKey = @ForeignKey(name = "fk_user_role"))
     private Role role;

@@ -1,33 +1,188 @@
-<!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="zxx" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8"/>
-    <title>Login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <title th:text="${pageTitle} ?: '..:: SKILLE - Online Courses and Library ::..'">..:: SKILLE - Online Courses and Library ::..</title>
+
+    <link th:href="@{/images/favicon.ico}" rel="icon" type="image/x-icon" />
+    <link th:href="@{/css/font-awesome.min.css}" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/mmenu.css}" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/mmenu.positioning.css}" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css" />
 </head>
+
 <body>
-<h2>Login</h2>
+<header id="header" class="inner-navbar-wrapper navbar-wrapper">
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" th:href="@{/}">
+                <img th:src="@{/images/logo-header-v1.png}" alt="Skille" />
+            </a>
 
-<div th:if="${param.registered}">Đăng ký thành công! Hãy đăng nhập.</div>
-<div th:if="${param.logout}">Bạn đã thoát.</div>
-<div th:if="${serverError}" th:text="${serverError}" style="color:red"></div>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="nav navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" th:href="@{/}" data-toggle="dropdown" aria-expanded="false">Home</a>
+                    </li>
 
-<form th:action="@{/auth/login}" th:object="${loginRequest}" method="post">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <li class="nav-item dropdown">
+                        <a data-toggle="dropdown" aria-expanded="false" class="nav-link dropdown-toggle" th:href="@{/books-media-list-view}">Books &amp; Media</a>
 
-    <div>
-        <label>Username</label>
-        <input th:field="*{username}" />
-        <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">News &amp; Events</a>
+
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="active nav-link dropdown-toggle" href="#" data-toggle="dropdown">Pages</a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Blog</a>
+                    </li>
+
+                    <li class="nav-item"><a class="nav-link" th:href="@{/contact}">Contact</a></li>
+                </ul>
+
+                <div class="header-login-btn">
+                    <a th:href="@{/auth/register}" class="btn btn-light"><i class="fa fa-user"></i> Register</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile -->
+        <div class="mobile-menu d-lg-none">
+            <a href="#mobile-menu"><i class="fa fa-navicon"></i></a>
+            <div id="mobile-menu">
+                <ul>
+                    <li class="mobile-title"><h4>Navigation</h4><a href="#" class="close"></a></li>
+                    <li>
+                        <a th:href="@{/}">Home</a>
+                        <ul>
+                            <li><a th:href="@{/}">Home V1</a></li>
+                            <li><a th:href="@{/home-v2}">Home V2</a></li>
+                            <li><a th:href="@{/home-v3}">Home V3</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a th:href="@{/books-media-list-view}">Books &amp; Media</a>
+                        <ul>
+                            <li><a th:href="@{/books-media-list-view}">Books &amp; Media List View</a></li>
+                            <li><a th:href="@{/books-media-gird-view}">Books &amp; Media Grid View</a></li>
+                            <li><a th:href="@{/books-media-v3}">Books &amp; Media V3</a></li>
+                            <li><a th:href="@{/books-media-detail-v1}">Books &amp; Media Detail V1</a></li>
+                            <li><a th:href="@{/books-media-detail-v2}">Books &amp; Media Detail V2</a></li>
+                            <li><a th:href="@{/books-media-detail-v3}">Books &amp; Media Detail V3</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a th:href="@{/news-events-list-view}">News &amp; Events</a>
+                        <ul>
+                            <li><a th:href="@{/news-events-list-view}">News &amp; Events List View</a></li>
+                            <li><a th:href="@{/news-events-detail}">News &amp; Events Detail</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#">Pages</a>
+                        <ul>
+                            <li><a th:href="@{/about-us}">About Us</a></li>
+                            <li><a th:href="@{/cart}">Cart</a></li>
+                            <li><a th:href="@{/wishlist}">Wishlist</a></li>
+                            <li><a th:href="@{/checkout}">Checkout</a></li>
+                            <li><a th:href="@{/signup}">SignUp/Register</a></li>
+                            <li><a th:href="@{/signin}">SignIn</a></li>
+                            <li><a th:href="@{/404}">404/Error</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a th:href="@{/blog-list}">Blog</a>
+                        <ul>
+                            <li><a th:href="@{/blog-list}">Blog List View</a></li>
+                            <li><a th:href="@{/blog-grid}">Blog Grid View</a></li>
+                            <li><a th:href="@{/blog-detail}">Blog Detail</a></li>
+                        </ul>
+                    </li>
+                    <li><a th:href="@{/contact}">Contact</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
+</header>
 
-    <div>
-        <label>Password</label>
-        <input type="password" th:field="*{password}" />
-        <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+
+<div id="content" class="site-content">
+    <div id="primary" class="content-area">
+        <main id="main" class="site-main">
+            <div class="signin-main">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <img class="rounded" th:src="@{/images/section-images/signin-pages-image.png}" alt="">
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="signin-up-form">
+                                <!-- FORM -->
+                                <form th:action="@{/auth/login}" th:object="${loginRequest}" method="post" novalidate>
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                                    <div class="form-group">
+                                        <label for="identifier">Email address or Username</label>
+                                        <!-- Gợi ý: dùng field 'identifier' cho email/username -->
+                                        <input id="identifier" type="text" class="form-control" th:field="*{username}" placeholder="Enter email or username">
+                                        <small class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="password">Password</label>
+                                        <input id="password" type="password" class="form-control" th:field="*{password}" placeholder="Password" autocomplete="current-password">
+                                        <small class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></small>
+                                    </div>
+
+                                    <!-- Thông báo lỗi từ Spring Security (?error) hoặc flash -->
+                                    <div class="alert alert-danger" th:if="${param.error}">Invalid username or password.</div>
+                                    <div class="alert alert-success" th:if="${param.logout}">You have been logged out.</div>
+                                    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+                                    <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+                                    <button type="submit" class="btn btn-secondary">Login For Access</button>
+                                </form>
+                                <!-- /FORM -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
+</div>
 
-    <button type="submit">Login</button>
-    <a th:href="@{/auth/register}">Register</a>
-</form>
+
+
+<!-- Scripts -->
+<script th:src="@{https://code.jquery.com/jquery-2.2.3.min.js}"></script>
+<script th:src="@{/js/jquery-ui.min.js}"></script>
+<script th:src="@{/js/jquery.easing.1.3.js}"></script>
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/mmenu.min.js}"></script>
+<script th:src="@{/js/harvey.min.js}"></script>
+<script th:src="@{/js/waypoints.min.js}"></script>
+<script th:src="@{/js/facts.counter.min.js}"></script>
+<script th:src="@{/js/mixitup.min.js}"></script>
+<script th:src="@{/js/owl.carousel.min.js}"></script>
+<script th:src="@{/js/accordion.min.js}"></script>
+<script th:src="@{/js/masonry.min.js}"></script>
+<script th:src="@{/js/carousel.swipe.min.js}"></script>
+<script th:src="@{/js/card-slider-min.js}"></script>
+<!-- Map: nếu cần -->
+<script th:src="@{https://maps.googleapis.com/maps/api/js(key=${googleApiKey})}"></script>
+<script th:src="@{/js/google.map.js}"></script>
+<script th:src="@{/js/aos.js}"></script>
+<script th:src="@{/js/highlight.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
 </body>
 </html>
