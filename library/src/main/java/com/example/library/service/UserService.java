@@ -45,4 +45,9 @@ public class UserService implements IUserService {
         user.setPasswordHash(encoder.encode(req.newPassword()));
         userRepo.save(user);
     }
+
+    @Override
+    public UserAccount findByUserIdOrPhoneNumberOrEmail(Long userId, String phoneNumber, String email) {
+        return userRepo.findByUserIdOrPhoneNumberOrEmail(userId, phoneNumber, email);
+    }
 }

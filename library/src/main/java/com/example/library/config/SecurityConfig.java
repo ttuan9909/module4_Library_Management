@@ -41,9 +41,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/uploads/avatar").authenticated()
                         .anyRequest().authenticated()
                 )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authenticationProvider(authProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
