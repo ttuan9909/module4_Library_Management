@@ -2,44 +2,42 @@ package com.example.library.controller;
 
 import com.example.library.dto.request.BookListDTO;
 import com.example.library.entity.Category;
-import com.example.library.service.IBookListService;
+import com.example.library.service.IBookService; // ĐÃ SỬA: Thay thế IBookListService bằng IBookService
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/booklist")
+@RequestMapping("/api/books")
 @RequiredArgsConstructor
-public class BookListRestController {
+public class BookRestController {
 
-    private final IBookListService bookListService;
+    // ĐÃ SỬA: Thay đổi kiểu interface và tên biến để khớp với Service Bean đã định nghĩa
+    private final IBookService bookService;
 
     // =========================================================
     // GET ALL BOOKS
     // =========================================================
     @GetMapping
     public ResponseEntity<List<BookListDTO>> getAllBooks() {
-        return ResponseEntity.ok(bookListService.getAllBooks());
+        return ResponseEntity.ok(bookService.getAllBooks());
     }
 
     // =========================================================
-    // GET BOOK BY ID – DÙNG getBookById() CÔNG KHAI
+    // GET BOOK BY ID
     // =========================================================
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable("id") Long id) {
         try {
-            BookListDTO dto = bookListService.getBookById(id);
-            return ResponseEntity.ok(dto);
-        } catch (org.springframework.web.server.ResponseStatusException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Không tìm thấy sách ID: " + id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            return ResponseEntity.ok(bookService.getBookById(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Không tìm thấy sách ID: " + id));
         }
     }
 
@@ -47,18 +45,24 @@ public class BookListRestController {
     // CREATE BOOK
     // =========================================================
     @PostMapping
-    public ResponseEntity<BookListDTO> createBook(@Valid @RequestBody BookListDTO dto) {
-        BookListDTO saved = bookListService.createBook(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<?> createBook(@Valid @RequestBody BookListDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(bookService.createBook(dto));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     // =========================================================
     // UPDATE BOOK
     // =========================================================
     @PutMapping("/{id}")
-    public ResponseEntity<BookListDTO> updateBook(@PathVariable("id") Long id, @Valid @RequestBody BookListDTO dto) {
-        BookListDTO updated = bookListService.updateBook(id, dto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<?> updateBook(@PathVariable("id") Long id, @Valid @RequestBody BookListDTO dto) {
+        try {
+            return ResponseEntity.ok(bookService.updateBook(id, dto));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     // =========================================================
@@ -66,10 +70,8 @@ public class BookListRestController {
     // =========================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteBook(@PathVariable("id") Long id) {
-        bookListService.deleteBook(id);
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Xóa sách thành công!");
-        return ResponseEntity.ok(response);
+        bookService.deleteBook(id);
+        return ResponseEntity.ok(Map.of("message", "Xóa sách thành công!"));
     }
 
     // =========================================================
@@ -77,6 +79,6 @@ public class BookListRestController {
     // =========================================================
     @GetMapping("/categories")
     public ResponseEntity<List<Category>> getAllCategories() {
-        return ResponseEntity.ok(bookListService.getAllCategories());
+        return ResponseEntity.ok(bookService.getAllCategories());
     }
 }

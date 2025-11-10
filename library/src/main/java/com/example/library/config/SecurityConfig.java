@@ -57,6 +57,8 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     
     }
+
+    
     
 }
 

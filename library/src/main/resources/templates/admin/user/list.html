@@ -2,75 +2,42 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>📋 Danh sách thành viên</title>
+    <title>Danh sách thành viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+    <!-- CSRF TOKEN -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <style>
         body { background-color: #f6f7fb; font-family: "Segoe UI", sans-serif; }
-
-        /* Sidebar Styling */
         .sidebar { width: 250px; height: 100vh; background-color: #f8f9fa; border-right: 1px solid #e5e5e5;
                    position: fixed; top: 0; left: 0; padding: 0 20px 20px 20px; }
-        .sidebar-brand {
-            padding: 20px 0;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e5e5e5;
-            text-align: left;
-        }
-        .sidebar-brand h4 {
-            margin: 0;
-            font-weight: 700;
-            color: #1c7c54;
-        }
-        /* Cải tiến Menu Item Styling */
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            border-radius: 6px;
-            color: #333;
-            text-decoration: none;
-            margin-bottom: 6px;
-        }
-        .sidebar a.active {
-            background-color: #e0f3eb;
-            color: #1c7c54;
-            font-weight: 600;
-        }
-        .sidebar a:hover {
-            background-color: #f0f0f0;
-            transition: background-color 0.2s;
-        }
-        .sidebar i {
-            width: 25px;
-        }
-
-        /* Main Content */
+        .sidebar-brand { padding: 20px 0; margin-bottom: 10px; border-bottom: 1px solid #e5e5e5; text-align: left; }
+        .sidebar-brand h4 { margin: 0; font-weight: 700; color: #1c7c54; }
+        .sidebar a { display: flex; align-items: center; padding: 10px 15px; border-radius: 6px; color: #333;
+                     text-decoration: none; margin-bottom: 6px; }
+        .sidebar a.active { background-color: #e0f3eb; color: #1c7c54; font-weight: 600; }
+        .sidebar a:hover { background-color: #f0f0f0; transition: background-color 0.2s; }
+        .sidebar i { width: 25px; }
         .main-content { margin-left: 250px; padding: 20px; }
         .page-header { background-color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                        display: flex; justify-content: space-between; align-items: center; }
         .client-table { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
-        .table td { padding: 12px; }
-
-        /* Badge and Pulse */
-        .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; color: #fff; font-weight: 600; display: inline-block; min-width: 80px; text-align: center; }
+        .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; color: #fff; font-weight: 600;
+                        display: inline-block; min-width: 80px; text-align: center; }
         .status-ACTIVE { background-color: #1c7c54; }
         .status-LOCKED { background-color: #dc3545; }
         .status-DISABLED { background-color: #6c757d; }
         .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
         .role-ROLE_ADMIN { background-color: #0d6efd; color: #fff; }
         .role-ROLE_READER { background-color: #f8f9fa; color: #333; border: 1px solid #ddd; }
-        @keyframes pulse-green {
-            0% { background-color: #e0f3eb; }
-            100% { background-color: transparent; }
-        }
-        .new-row-pulse {
-            animation: pulse-green 3s ease-out forwards;
-        }
+        @keyframes pulse-green { 0% { background-color: #e0f3eb; } 100% { background-color: transparent; } }
+        .new-row-pulse { animation: pulse-green 2s ease-out forwards; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
     </style>
 </head>
 <body>
@@ -85,18 +52,20 @@
     <a th:href="@{/admin/books}"><i class="fas fa-book"></i> Book List</a>
     <a th:href="@{/publications}"><i class="fas fa-newspaper"></i> Publications</a>
     <a th:href="@{/categories}"><i class="fas fa-tags"></i> Book Categories</a>
-    <a th:href="@{/users}" class="active"><i class="fas fa-users"></i> Members</a>
+    <a th:href="@{/admin/users}" class="active"><i class="fas fa-users"></i> Members</a>
 </div>
+
 <div class="main-content">
     <div class="page-header">
         <h4 class="m-0">
             <i class="fas fa-users me-2 text-primary"></i> Danh sách thành viên
         </h4>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal" onclick="resetAddForm()">
             <i class="fas fa-plus-circle me-1"></i> Thêm thành viên
         </button>
     </div>
 
+    <!-- Tìm kiếm & Lọc -->
     <div class="client-table p-3 mb-3">
         <div class="row align-items-center">
             <div class="col-md-5">
@@ -106,7 +75,7 @@
                 </div>
             </div>
             <div class="col-md-7 text-end">
-                <label class="form-label me-2 mb-0 fw-bold text-muted">Lọc theo:</label>
+                <label class="form-label me-2 mb-0 fw-bold text-muted">Lọc:</label>
                 <select id="roleFilter" class="form-select d-inline-block w-auto me-2">
                     <option value="">Tất cả Vai trò</option>
                     <option value="ROLE_ADMIN">ROLE_ADMIN</option>
@@ -121,598 +90,417 @@
             </div>
         </div>
     </div>
+
+    <!-- Bảng thành viên -->
     <div class="client-table">
         <table id="userTable" class="table table-hover align-middle">
             <thead class="table-light">
-            <tr>
-                <th class="text-center" style="width: 5%">#</th>
-                <th style="width: 20%">Họ tên</th>
-                <th style="width: 20%">Email</th>
-                <th class="text-center" style="width: 10%">SĐT</th>
-                <th class="text-center" style="width: 10%">Tài khoản</th>
-                <th class="text-center" style="width: 10%">Vai trò</th>
-                <th class="text-center" style="width: 10%">Trạng thái</th>
-                <th class="text-center" style="width: 15%">Thao tác</th>
-            </tr>
+                <tr>
+                    <th class="text-center" style="width: 5%">#</th>
+                    <th style="width: 20%">Họ tên</th>
+                    <th style="width: 20%">Email</th>
+                    <th class="text-center" style="width: 10%">SĐT</th>
+                    <th class="text-center" style="width: 10%">Tài khoản</th>
+                    <th class="text-center" style="width: 10%">Vai trò</th>
+                    <th class="text-center" style="width: 10%">Trạng thái</th>
+                    <th class="text-center" style="width: 15%">Thao tác</th>
+                </tr>
             </thead>
             <tbody id="userTableBody">
-            <tr th:each="user, iterStat : ${users}" th:attr="data-user-id=${user.userId}">
-                <td th:text="${iterStat.count}" class="text-center">1</td>
-                <td>
-                    <a th:href="@{'/users/detail/' + ${user.username}}" th:text="${user.fullName}" class="text-decoration-none fw-bold"></a>
-                </td>
-                <td th:text="${user.email}"></td>
-                <td th:text="${user.phoneNumber}" class="text-center"></td>
-                <td th:text="${user.username}" class="text-center"></td>
-
-                <td class="text-center">
-                    <span th:text="${user.roleName}" th:classappend="'role-' + ${user.roleName}" class="role-badge">READER</span>
-                </td>
-
-                <td class="text-center">
-                    <span th:text="${user.status}" th:classappend="'status-' + ${user.status}" class="status-badge">ACTIVE</span>
-                </td>
-
-                <td class="text-center">
-                    <a th:href="@{'/users/detail/' + ${user.userId}}"
-                       class="btn-view-detail btn btn-sm btn-outline-info me-1"
-                       title="Xem chi tiết">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <button
-                        class="btn-edit btn btn-sm btn-outline-primary me-1"
-                        th:attr="data-user-id=${user.userId}"
-                        title="Sửa">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button
-                    class="btn-delete btn btn-sm btn-outline-danger"
-                        th:attr="data-user-id=${user.userId}"
-                        title="Xóa">
-                    <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(users)}" id="emptyRow">
-                <td colspan="8" class="text-center text-muted">Không có thành viên nào</td>
-            </tr>
+                <tr><td colspan="8" class="text-center py-5 text-muted">Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
-
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">Hiển thị 1 - 10 trong tổng số 50 thành viên</small>
-            <nav>
-                <ul class="pagination pagination-sm m-0">
-                    <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">Sau</a></li>
-                </ul>
-            </nav>
+            <small class="text-muted">Hiển thị <span id="showing">0</span> trong tổng <span id="totalUsers">0</span> thành viên</small>
         </div>
-
     </div>
-
-    <footer class="text-center text-muted mt-4">© 2025 Library Management System</footer>
 </div>
 
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal Thêm thành viên -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i> Thêm thành viên mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addUserForm" class="needs-validation" novalidate>
+            <form id="addUserForm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Thêm thành viên mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 border-end pe-4">
-                            <h6 class="text-primary mb-3"><i class="fas fa-user me-1"></i> Thông tin tài khoản</h6>
-                            <div class="mb-3">
-                                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
-                                <input type="text" id="fullName" name="fullName" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" id="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                                <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
-                                <input type="text" id="username" name="username" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
-                                <input type="password" id="password" name="password" class="form-control" required>
-                            </div>
+                            <h6 class="text-primary mb-3">Thông tin tài khoản</h6>
+                            <div class="mb-3"><label class="form-label">Họ tên <span class="text-danger">*</span></label><input type="text" id="fullName" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" id="email" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Số điện thoại <span class="text-danger">*</span></label><input type="text" id="phoneNumber" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label><input type="text" id="username" class="form-control" required></div>
+                            <div class="mb-3"><label class="form-label">Mật khẩu <span class="text-danger">*</span></label><input type="password" id="password" class="form-control" required></div>
                         </div>
-
                         <div class="col-md-6 ps-4">
-                            <h6 class="text-success mb-3"><i class="fas fa-id-card me-1"></i> Thông tin thẻ thư viện</h6>
-                            
-                            <p class="alert alert-info py-2 px-3 mb-3"><small><i class="fas fa-info-circle me-1"></i> Ngày Kết thúc có thể **bỏ trống**, hệ thống sẽ tự động gán 1 năm kể từ Ngày Bắt đầu.</small></p>
-
-                            <div class="mb-3">
-                                <label class="form-label">Ngày bắt đầu</label>
-                                <input type="date" id="cardStartDate" name="cardStartDate" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ngày kết thúc (Tùy chọn)</label>
-                                <input type="date" id="cardEndDate" name="cardEndDate" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Trạng thái thẻ</label>
-                                <select id="cardStatus" name="cardStatus" class="form-select">
-                                    <option value="ACTIVE" selected>ACTIVE (Mặc định)</option>
+                            <h6 class="text-success mb-3">Thông tin thẻ thư viện</h6>
+                            <p class="alert alert-info py-2 px-3 mb-3"><small>Ngày Kết thúc có thể bỏ trống, hệ thống sẽ tự động gán 1 năm.</small></p>
+                            <div class="mb-3"><label class="form-label">Ngày bắt đầu</label><input type="date" id="cardStartDate" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label">Ngày kết thúc (Tùy chọn)</label><input type="date" id="cardEndDate" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label">Trạng thái thẻ</label>
+                                <select id="cardStatus" class="form-select">
+                                    <option value="ACTIVE">ACTIVE</option>
                                     <option value="EXPIRED">EXPIRED</option>
                                     <option value="SUSPENDED">SUSPENDED</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ghi chú (Notes)</label>
-                                <textarea id="cardNotes" name="cardNotes" class="form-control" rows="2"></textarea>
-                            </div>
+                            <div class="mb-3"><label class="form-label">Ghi chú</label><textarea id="cardNotes" class="form-control" rows="2"></textarea></div>
                         </div>
                     </div>
-                    <div class="text-end border-top pt-3 mt-3">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Thêm thành viên</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm thành viên</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+<!-- Modal Sửa thành viên -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Chỉnh sửa thành viên</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editUserForm">
-                    <input type="hidden" id="editUserId" name="userId">
-                    <input type="hidden" id="editUsername" name="username">
-
+            <form id="editUserForm">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Chỉnh sửa thành viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId">
+                    <input type="hidden" id="editUsername">
                     <div class="row">
                         <div class="col-md-6 border-end pe-4">
-                            <h6 class="text-primary mb-3"><i class="fas fa-user me-1"></i> Thông tin tài khoản</h6>
+                            <h6 class="text-primary mb-3">Thông tin tài khoản</h6>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Họ tên</label>
-                                    <input type="text" id="editFullName" name="fullName" class="form-control">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" id="editEmail" name="email" class="form-control">
-                                </div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Họ tên</label><input type="text" id="editFullName" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Email</label><input type="email" id="editEmail" class="form-control"></div>
                             </div>
-
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Số điện thoại</label>
-                                    <input type="text" id="editPhoneNumber" name="phoneNumber" class="form-control">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Ngày sinh</label>
-                                    <input type="date" id="editDateOfBirth" name="dateOfBirth" class="form-control">
-                                </div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Số điện thoại</label><input type="text" id="editPhoneNumber" class="form-control"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Ngày sinh</label><input type="date" id="editDateOfBirth" class="form-control"></div>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Địa chỉ</label>
-                                <textarea id="editAddress" name="address" class="form-control" rows="2"></textarea>
-                            </div>
-
+                            <div class="mb-3"><label class="form-label">Địa chỉ</label><textarea id="editAddress" class="form-control" rows="2"></textarea></div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Vai trò</label>
-                                    <select id="editRoleName" name="roleName" class="form-select">
+                                    <select id="editRoleName" class="form-select">
                                         <option value="ROLE_READER">ROLE_READER</option>
                                         <option value="ROLE_ADMIN">ROLE_ADMIN</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Trạng thái User</label>
-                                    <select id="editStatus" name="status" class="form-select">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select id="editStatus" class="form-select">
                                         <option value="ACTIVE">ACTIVE</option>
                                         <option value="LOCKED">LOCKED</option>
                                         <option value="DISABLED">DISABLED</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Avatar URL</label>
-                                <input type="url" id="editAvatarUrl" name="avatarUrl" class="form-control" placeholder="URL hình ảnh đại diện">
-                            </div>
-                            <p class="text-muted"><small>Để trống trường mật khẩu để giữ nguyên mật khẩu cũ.</small></p>
-                            <div class="mb-3">
-                                <label class="form-label">Mật khẩu mới (Tùy chọn)</label>
-                                <input type="password" id="editPassword" name="password" class="form-control">
-                            </div>
+                            <div class="mb-3"><label class="form-label">Avatar URL</label><input type="url" id="editAvatarUrl" class="form-control"></div>
+                            <p class="text-muted"><small>Để trống mật khẩu để giữ nguyên.</small></p>
+                            <div class="mb-3"><label class="form-label">Mật khẩu mới (Tùy chọn)</label><input type="password" id="editPassword" class="form-control"></div>
                         </div>
-
                         <div class="col-md-6 ps-4">
-                            <h6 class="text-success mb-3"><i class="fas fa-id-card me-1"></i> Thông tin thẻ thư viện</h6>
-                            
-                            <p class="alert alert-info py-2 px-3 mb-3"><small><i class="fas fa-info-circle me-1"></i> Ngày Kết thúc có thể **bỏ trống** nếu bạn muốn hệ thống tự động gán.</small></p>
-
-                            <div class="mb-3">
-                                <label class="form-label">Số thẻ (Card Number)</label>
-                                <input type="text" id="editCardNumber" name="cardNumber" class="form-control" readonly title="Số thẻ được gán tự động khi tạo, nên hạn chế chỉnh sửa">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Ngày bắt đầu</label>
-                                <input type="date" id="editCardStartDate" name="cardStartDate" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ngày kết thúc (Tùy chọn)</label>
-                                <input type="date" id="editCardEndDate" name="cardEndDate" class="form-control">
-                            </div>
+                            <h6 class="text-success mb-3">Thông tin thẻ thư viện</h6>
+                            <p class="alert alert-info py-2 px-3 mb-3"><small>Ngày Kết thúc có thể bỏ trống.</small></p>
+                            <div class="mb-3"><label class="form-label">Số thẻ</label><input type="text" id="editCardNumber" class="form-control" readonly></div>
+                            <div class="mb-3"><label class="form-label">Ngày bắt đầu</label><input type="date" id="editCardStartDate" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label">Ngày kết thúc</label><input type="date" id="editCardEndDate" class="form-control"></div>
                             <div class="mb-3">
                                 <label class="form-label">Trạng thái thẻ</label>
-                                <select id="editCardStatus" name="cardStatus" class="form-select">
+                                <select id="editCardStatus" class="form-select">
                                     <option value="ACTIVE">ACTIVE</option>
                                     <option value="EXPIRED">EXPIRED</option>
                                     <option value="SUSPENDED">SUSPENDED</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ghi chú thẻ</label>
-                                <textarea id="editCardNotes" name="cardNotes" class="form-control" rows="3"></textarea>
-                            </div>
+                            <div class="mb-3"><label class="form-label">Ghi chú</label><textarea id="editCardNotes" class="form-control" rows="3"></textarea></div>
                         </div>
                     </div>
-                    <div class="text-end border-top pt-3 mt-3">
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Lưu thay đổi</button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Xóa -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Bạn có chắc chắn muốn <strong>xóa thành viên này</strong>?</p>
+                <p class="text-muted small">Hành động này <strong>không thể hoàn tác</strong>.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa ngay</button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    // Hàm Helper: Lấy giá trị hoặc trả về null nếu trống
-    const getValueOrNull = (id) => {
-        const value = $(`#${id}`).val();
-        return value === '' ? null : value;
-    };
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const API_BASE = '/admin/users';
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+    let deleteUserId = null;
 
-    // ====================================================================
-    // CÁC HÀM THAO TÁC CƠ BẢN
-    // ====================================================================
-
-    // Hàm cập nhật số thứ tự (Giữ nguyên)
-    function updateRowNumbers() {
-        let count = 1;
-        $("#userTableBody tr:visible").each(function() {
-            $(this).find('td:eq(0)').text(count++);
-        });
-    }
-
-    // Logic Lọc và Tìm kiếm (Giữ nguyên)
-    $("#searchInput, #roleFilter, #statusFilter").on('input change', function() {
-        const searchValue = $("#searchInput").val().toLowerCase();
-        const roleFilter = $("#roleFilter").val().toUpperCase();
-        const statusFilter = $("#statusFilter").val().toUpperCase();
-        let rowsVisible = 0;
-
-        $("#userTableBody tr").each(function() {
-            const $row = $(this);
-            const fullName = $row.find('td:eq(1)').text().toLowerCase();
-            const email = $row.find('td:eq(2)').text().toLowerCase();
-            const phoneNumber = $row.find('td:eq(3)').text().toLowerCase();
-            const role = $row.find('.role-badge').text().toUpperCase();
-            const status = $row.find('.status-badge').text().toUpperCase();
-            
-            const matchesSearch = fullName.includes(searchValue) || email.includes(searchValue) || phoneNumber.includes(searchValue);
-            const matchesRole = roleFilter === '' || role === roleFilter;
-            const matchesStatus = statusFilter === '' || status === statusFilter;
-
-            if (matchesSearch && matchesRole && matchesStatus) {
-                $row.show();
-                rowsVisible++;
-            } else {
-                $row.hide();
-            }
-        });
-        
-        // Cập nhật số thứ tự cho các hàng hiển thị
-        updateRowNumbers();
-
-        // Hiển thị/Ẩn hàng 'Không có thành viên'
-        if (rowsVisible === 0) {
-            if ($("#emptyRow").length === 0) {
-                $("#userTableBody").append('<tr id="emptyRow"><td colspan="8" class="text-center text-muted">Không có thành viên nào phù hợp với bộ lọc.</td></tr>');
-            } else {
-                $("#emptyRow").show();
-            }
-        } else {
-            $("#emptyRow").hide();
+    $(document).ajaxSend(function(e, xhr, options) {
+        if (['POST', 'PUT', 'DELETE'].includes(options.type)) {
+            xhr.setRequestHeader(csrfHeader, csrfToken);
         }
     });
 
-    // ====================================================================
-    // LOGIC THÊM MỚI (ADD USER) - ĐÃ SỬA DÙNG HELPER CHO ENDDATE
-    // ====================================================================
-    $("#addUserForm").submit(function (e) {
-        e.preventDefault();
+    function showToast(message, type = 'success') {
+        const bg = type === 'success' ? 'bg-success' : 'bg-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        const toast = `
+            <div class="toast align-items-center text-white ${bg} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${icon} me-2"></i> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+        $('#toastContainer').append(toast);
+        const newToast = $('#toastContainer .toast').last()[0];
+        const bsToast = new bootstrap.Toast(newToast, { delay: 3000 });
+        bsToast.show();
+        $(newToast).on('hidden.bs.toast', () => $(newToast).remove());
+    }
 
-        // 1. Thu thập dữ liệu LibraryCard
-        const libraryCardData = {
-            startDate: getValueOrNull('cardStartDate'), 
-            endDate: getValueOrNull('cardEndDate'), // Gửi null nếu trống
-            status: getValueOrNull('cardStatus') || 'ACTIVE',
-            notes: getValueOrNull('cardNotes')
-        };
+    function resetAddForm() {
+        $('#addUserForm')[0].reset();
+    }
 
-        // 2. Thu thập dữ liệu UserAccount
-        const userData = {
-            fullName: $("#fullName").val(),
-            email: $("#email").val(),
-            phoneNumber: $("#phoneNumber").val(),
-            username: $("#username").val(),
-            password: $("#password").val(),
-            // Thêm trường avatarUrl, dateOfBirth, address nếu cần trong logic thêm mới
-            // roleName và status sẽ được gán mặc định ở tầng Service
-            libraryCard: libraryCardData 
-        };
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
-        $.ajax({
-            url: "/users/create",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(userData), 
-            success: function (user) {
-                $("#emptyRow").remove();
+    function loadUsers() {
+    $.get(API_BASE)
+        .done(response => {
 
-                const roleName = (user.roleName || "ROLE_READER").toUpperCase();
-                const statusName = (user.status || "ACTIVE").toUpperCase();
+            // Lấy danh sách user đúng trường dữ liệu
+            const users = response.content || response.data || response;
 
-                const roleBadgeHtml = `<span class="role-badge role-${roleName}">${roleName}</span>`;
-                const statusBadgeHtml = `<span class="status-badge status-${statusName}">${statusName}</span>`;
+            const tbody = $('#userTableBody');
+            tbody.empty();
 
-                const rowCount = $("#userTableBody tr").length + 1;
+            $('#totalUsers').text(response.totalElements || users.length);
+            $('#showing').text(users.length);
 
-                const newRow = `
-                <tr class="new-row-pulse" data-user-id='${user.userId}'>
-                    <td class="text-center">${rowCount}</td>
-                    <td><a href="/users/detail/${user.username}" class="text-decoration-none fw-bold">${user.fullName}</a></td>
-                    <td>${user.email}</td>
-                    <td class="text-center">${user.phoneNumber}</td>
-                    <td class="text-center">${user.username}</td>
-
-                    <td class="text-center">${roleBadgeHtml}</td>
-
-                    <td class="text-center">${statusBadgeHtml}</td>
-
-                    <td class="text-center">
-                        <a href="/users/detail/${user.userId}"
-                           class="btn-view-detail btn btn-sm btn-outline-info me-1"
-                           title="Xem chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button
-                            class="btn-edit btn btn-sm btn-outline-primary me-1"
-                            data-user-id="${user.userId}"
-                            title="Sửa">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button
-                            class="btn-delete btn btn-sm btn-outline-danger"
-                            data-user-id="${user.userId}"
-                            title="Xóa">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-                `;
-
-                $("#userTableBody").append(newRow);
-
-                $("#addUserForm")[0].reset();
-
-                const modalElement = document.getElementById('addUserModal');
-                const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-                modal.hide();
-
-                alert("✅ Thêm thành viên mới thành công!");
-
-                updateRowNumbers();
-            },
-            error: function (xhr) {
-                let errorMessage = "Đã xảy ra lỗi không xác định khi thêm.";
-                try {
-                    const errorJson = JSON.parse(xhr.responseText);
-                    errorMessage = errorJson.message || xhr.responseText; 
-                } catch (e) {
-                    errorMessage = xhr.responseText;
-                }
-                alert("❌ Lỗi khi thêm thành viên: " + errorMessage);
-            }
-        });
-    });
-
-    // ====================================================================
-    // LOGIC CHỈNH SỬA THÀNH VIÊN (DÙNG USER ID) - ĐÃ SỬA DÙNG HELPER CHO ENDDATE
-    // ====================================================================
-    $(document).ready(function() {
-
-        // 1. Bắt sự kiện click nút Sửa và hiển thị Modal (AJAX GET: DÙNG USER ID)
-        $("#userTableBody").on("click", ".btn-edit", function() {
-            const userId = $(this).data("user-id");
-
-            if (!userId) {
-                alert("Lỗi: Không tìm thấy User ID để chỉnh sửa.");
+            if (!Array.isArray(users) || users.length === 0) {
+                tbody.append('<tr><td colspan="8" class="text-center text-muted py-5">Không có thành viên nào</td></tr>');
                 return;
             }
 
-            // Dùng API GET /users/{id}
-            $.ajax({
-                url: `/users/${userId}`, // API GET: Lấy dữ liệu user theo ID
-                method: "GET",
-                success: function(user) {
-                    // ------------------------------------------
-                    // Đổ dữ liệu USER cơ bản
-                    // ------------------------------------------
-                    $("#editUserId").val(user.userId);
-                    $("#editUsername").val(user.username);
-                    $("#editFullName").val(user.fullName);
-                    $("#editEmail").val(user.email);
-                    $("#editPhoneNumber").val(user.phoneNumber);
-                    $("#editAddress").val(user.address);
-                    $("#editAvatarUrl").val(user.avatarUrl);
-                    $("#editPassword").val(''); // Luôn xóa mật khẩu cũ
+            users.forEach((user, index) => {
+                const roleClass = user.roleName === 'ROLE_ADMIN' ? 'ROLE_ADMIN' : 'ROLE_READER';
+                const statusClass = user.status === 'ACTIVE' ? 'ACTIVE' :
+                                    user.status === 'LOCKED' ? 'LOCKED' : 'DISABLED';
 
-                    if (user.dateOfBirth) {
-                        const dob = user.dateOfBirth.split('T')[0];
-                        $("#editDateOfBirth").val(dob);
-                    } else {
-                        $("#editDateOfBirth").val('');
-                    }
-
-                    $("#editRoleName").val(user.roleName || 'ROLE_READER');
-                    let statusToSet = (user.status || 'ACTIVE').toUpperCase();
-                    if (statusToSet === 'INACTIVE') {
-                        statusToSet = 'DISABLED'; 
-                    }
-                    $("#editStatus").val(statusToSet);
-
-                    // ------------------------------------------
-                    // Đổ dữ liệu LIBRARY CARD
-                    // ------------------------------------------
-                    if (user.libraryCard) {
-                        const card = user.libraryCard;
-                        $("#editCardNumber").val(card.cardNumber || '');
-                        $("#editCardStartDate").val(card.startDate ? card.startDate.split('T')[0] : '');
-                        $("#editCardEndDate").val(card.endDate ? card.endDate.split('T')[0] : '');
-                        $("#editCardStatus").val(card.status || 'ACTIVE');
-                        $("#editCardNotes").val(card.notes || '');
-                    } else {
-                        // Xóa các trường thẻ nếu User chưa có thẻ
-                        $("#editCardNumber").val('CHƯA CÓ THẺ');
-                        $("#editCardStartDate").val('');
-                        $("#editCardEndDate").val('');
-                        $("#editCardStatus").val('ACTIVE');
-                        $("#editCardNotes").val('');
-                    }
-
-                    $("#editUserModal").modal("show");
-                },
-                error: function(xhr) {
-                    alert(`❌ Lỗi khi tải dữ liệu thành viên (ID: ${userId}): ${xhr.responseText}`);
-                }
+                const row = `
+                    <tr class="new-row-pulse" data-user-id="${user.userId}">
+                        <td class="text-center">${index + 1}</td>
+                        <td><a href="/admin/users/detail/${user.userId}" class="text-decoration-none fw-bold">${escapeHtml(user.fullName || 'N/A')}</a></td>
+                        <td>${escapeHtml(user.email || 'N/A')}</td>
+                        <td class="text-center">${escapeHtml(user.phoneNumber || 'N/A')}</td>
+                        <td class="text-center">${escapeHtml(user.username)}</td>
+                        <td class="text-center"><span class="role-badge role-${roleClass}">${user.roleName}</span></td>
+                        <td class="text-center"><span class="status-badge status-${statusClass}">${user.status}</span></td>
+                        <td class="text-center">
+                            <a href="/admin/users/detail/${user.userId}" class="btn btn-sm btn-outline-info me-1" title="Chi tiết"><i class="fas fa-eye"></i></a>
+                            <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${user.userId}" title="Sửa"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${user.userId}" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>`;
+                tbody.append(row);
             });
-        });
-
-        // 2. Bắt sự kiện submit form Edit và gửi AJAX PUT
-        $("#editUserForm").on('submit', function(e) {
-            e.preventDefault();
-
-            const userId = $("#editUserId").val();
-
-            // ------------------------------------------
-            // 1. Thu thập dữ liệu LibraryCard - DÙNG HELPER
-            // ------------------------------------------
-            const libraryCardData = {
-                cardNumber: getValueOrNull('editCardNumber'), 
-                startDate: getValueOrNull('editCardStartDate'), 
-                endDate: getValueOrNull('editCardEndDate'), // LẤY NULL NẾU TRỐNG
-                status: getValueOrNull('editCardStatus'),
-                notes: getValueOrNull('editCardNotes')
-            };
-
-            // ------------------------------------------
-            // 2. Thu thập dữ liệu UserAccount
-            // ------------------------------------------
-            const updatedData = {
-                username: $("#editUsername").val(),
-                fullName: $("#editFullName").val(),
-                email: $("#editEmail").val(),
-                phoneNumber: $("#editPhoneNumber").val(),
-                address: $("#editAddress").val(),
-                avatarUrl: $("#editAvatarUrl").val(),
-                dateOfBirth: $("#editDateOfBirth").val(),
-                roleName: $("#editRoleName").val(),
-                status: $("#editStatus").val(),
-                password: $("#editPassword").val() || undefined, // Chỉ gửi nếu có nhập mật khẩu mới
-                // Đính kèm LibraryCard
-                libraryCard: libraryCardData 
-            };
-
-            // Dùng API PUT /users/update/{id}
-            $.ajax({
-                url: `/users/update/${userId}`,
-                method: "PUT",
-                contentType: "application/json",
-                data: JSON.stringify(updatedData),
-                success: function(updatedUser) {
-                    $("#editUserModal").modal("hide");
-
-                    // CẬP NHẬT BẢNG HIỂN THỊ
-                    const $row = $(`tr[data-user-id='${userId}']`);
-
-                    const newRoleName = (updatedUser.roleName || 'ROLE_READER').toUpperCase();
-                    const newStatus = (updatedUser.status || 'ACTIVE').toUpperCase();
-
-                    $row.find('td:eq(1) a').text(updatedUser.fullName);
-                    $row.find('td:eq(2)').text(updatedUser.email);
-                    $row.find('td:eq(3)').text(updatedUser.phoneNumber);
-                    $row.find('td:eq(4)').text(updatedUser.username);
-
-                    $row.find('td:eq(5)').html(`<span class="role-badge role-${newRoleName}">${newRoleName}</span>`);
-                    $row.find('td:eq(6)').html(`<span class="status-badge status-${newStatus}">${newStatus}</span>`);
-
-                    $row.addClass('new-row-pulse');
-                    setTimeout(() => { $row.removeClass('new-row-pulse'); }, 3000);
-
-                    alert("✅ Cập nhật thành viên thành công!");
-                },
-                error: function(xhr) {
-                    let errorMessage = "Đã xảy ra lỗi không xác định khi cập nhật.";
-                    try {
-                        const errorJson = JSON.parse(xhr.responseText);
-                        errorMessage = errorJson.message || xhr.responseText; 
-                    } catch (e) {
-                        errorMessage = xhr.responseText;
-                    }
-                    alert("❌ Lỗi khi cập nhật thành viên: " + errorMessage);
-                }
-            });
-        });
-
-        // 3. Xử lý xóa (Giữ nguyên)
-        $("#userTableBody").on("click", ".btn-delete", function() {
-            const userId = $(this).data("user-id");
-            const $row = $(this).closest('tr');
-            const userName = $row.find('td:eq(1)').text();
-
-            if (confirm(`Bạn có chắc chắn muốn xóa thành viên ${userName} (ID: ${userId})?`)) {
-                $.ajax({
-                    url: `/users/delete/${userId}`,
-                    method: "DELETE",
-                    success: function() {
-                        $row.fadeOut(300, function() {
-                            $(this).remove();
-                            updateRowNumbers();
-                            alert(`✅ Xóa thành viên ${userName} thành công!`);
-                        });
-                    },
-                    error: function(xhr) {
-                        alert(`❌ Lỗi khi xóa thành viên: ${xhr.responseText}`);
-                    }
-                });
+        })
+        .fail(xhr => {
+            console.error('Lỗi load users:', xhr);
+            if (xhr.status === 401 || xhr.status === 403) {
+                showToast('Phiên đăng nhập hết hạn! Đang chuyển về login...', 'danger');
+                setTimeout(() => location.href = '/login', 2000);
+            } else {
+                showToast('Không tải được danh sách! (Lỗi: ' + xhr.status + ')', 'danger');
             }
+        });
+    }
+
+
+    // Lọc + Tìm kiếm
+    $('#searchInput, #roleFilter, #statusFilter').on('input change', function() {
+        const search = $('#searchInput').val().toLowerCase();
+        const role = $('#roleFilter').val();
+        const status = $('#statusFilter').val();
+        let visible = 0;
+        $('#userTableBody tr').each(function() {
+            const $row = $(this);
+            const name = $row.find('td:eq(1)').text().toLowerCase();
+            const email = $row.find('td:eq(2)').text().toLowerCase();
+            const phone = $row.find('td:eq(3)').text().toLowerCase();
+            const rowRole = $row.find('.role-badge').text();
+            const rowStatus = $row.find('.status-badge').text();
+            const match = name.includes(search) || email.includes(search) || phone.includes(search);
+            const matchRole = !role || rowRole === role;
+            const matchStatus = !status || rowStatus === status;
+            $row.toggle(match && matchRole && matchStatus);
+            if (match && matchRole && matchStatus) visible++;
+        });
+        $('#showing').text(visible);
+    });
+
+    // Thêm thành viên
+    $('#addUserForm').submit(function(e) {
+        e.preventDefault();
+        const data = {
+            fullName: $('#fullName').val().trim(),
+            email: $('#email').val().trim(),
+            phoneNumber: $('#phoneNumber').val().trim(),
+            username: $('#username').val().trim(),
+            password: $('#password').val(),
+            libraryCard: {
+                startDate: $('#cardStartDate').val() || null,
+                endDate: $('#cardEndDate').val() || null,
+                status: $('#cardStatus').val(),
+                notes: $('#cardNotes').val().trim() || null
+            }
+        };
+
+        $.ajax({
+            url: API_BASE + '/create',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: () => {
+                $('#addUserModal').modal('hide');
+                resetAddForm();
+                loadUsers();
+                showToast('Thêm thành viên thành công!', 'success');
+            },
+            error: xhr => showToast(xhr.responseJSON?.message || 'Thêm thất bại!', 'danger')
         });
     });
 
+    // Sửa thành viên
+    $(document).on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        $.get(API_BASE + '/' + id).done(user => {
+            $('#editUserId').val(user.userId);
+            $('#editUsername').val(user.username);
+            $('#editFullName').val(user.fullName || '');
+            $('#editEmail').val(user.email || '');
+            $('#editPhoneNumber').val(user.phoneNumber || '');
+            $('#editAddress').val(user.address || '');
+            $('#editAvatarUrl').val(user.avatarUrl || '');
+            $('#editDateOfBirth').val(user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '');
+            $('#editRoleName').val(user.roleName || 'ROLE_READER');
+            $('#editStatus').val(user.status || 'ACTIVE');
+            $('#editPassword').val('');
+
+            if (user.libraryCard) {
+                $('#editCardNumber').val(user.libraryCard.cardNumber || '');
+                $('#editCardStartDate').val(user.libraryCard.startDate ? user.libraryCard.startDate.split('T')[0] : '');
+                $('#editCardEndDate').val(user.libraryCard.endDate ? user.libraryCard.endDate.split('T')[0] : '');
+                $('#editCardStatus').val(user.libraryCard.status || 'ACTIVE');
+                $('#editCardNotes').val(user.libraryCard.notes || '');
+            } else {
+                $('#editCardNumber').val('CHƯA CÓ THẺ');
+                $('#editCardStartDate').val('');
+                $('#editCardEndDate').val('');
+                $('#editCardStatus').val('ACTIVE');
+                $('#editCardNotes').val('');
+            }
+
+            $('#editUserModal').modal('show');
+        }).fail(() => showToast('Không tải được dữ liệu!', 'danger'));
+    });
+
+    $('#editUserForm').submit(function(e) {
+        e.preventDefault();
+        const id = $('#editUserId').val();
+        const data = {
+            username: $('#editUsername').val(),
+            fullName: $('#editFullName').val(),
+            email: $('#editEmail').val(),
+            phoneNumber: $('#editPhoneNumber').val(),
+            address: $('#editAddress').val(),
+            avatarUrl: $('#editAvatarUrl').val(),
+            dateOfBirth: $('#editDateOfBirth').val() || null,
+            roleName: $('#editRoleName').val(),
+            status: $('#editStatus').val(),
+            password: $('#editPassword').val() || undefined,
+            libraryCard: {
+                cardNumber: $('#editCardNumber').val(),
+                startDate: $('#editCardStartDate').val() || null,
+                endDate: $('#editCardEndDate').val() || null,
+                status: $('#editCardStatus').val(),
+                notes: $('#editCardNotes').val() || null
+            }
+        };
+
+        $.ajax({
+            url: API_BASE + '/update/' + id,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: () => {
+                $('#editUserModal').modal('hide');
+                loadUsers();
+                showToast('Cập nhật thành công!', 'success');
+            },
+            error: xhr => showToast(xhr.responseJSON?.message || 'Cập nhật thất bại!', 'danger')
+        });
+    });
+
+    // Xóa
+    $(document).on('click', '.btn-delete', function() {
+        deleteUserId = $(this).data('id');
+        $('#confirmDeleteModal').modal('show');
+    });
+
+    $('#confirmDeleteBtn').click(function() {
+        if (!deleteUserId) return;
+        $.ajax({
+            url: API_BASE + '/' + deleteUserId,
+            method: 'DELETE',
+            success: () => {
+                $('#confirmDeleteModal').modal('hide');
+                loadUsers();
+                showToast('Xóa thành viên thành công!', 'success');
+            },
+            error: () => showToast('Xóa thất bại!', 'danger')
+        });
+        deleteUserId = null;
+    });
+
+    $(document).ready(() => {
+        loadUsers();
+    });
+    /*]]>*/
 </script>
 </body>
 </html>
