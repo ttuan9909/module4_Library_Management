@@ -35,8 +35,6 @@
         .quantity-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: #0d6efd; color: #fff; }
         @keyframes pulse-green { 0% { background-color: #e0f3eb; } 100% { background-color: transparent; } }
         .new-row-pulse { animation: pulse-green 2s ease-out forwards; }
-
-        /* Toast Container */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
     </style>
 </head>
@@ -82,8 +80,8 @@
                 </select>
                 <select id="statusFilter" class="form-select d-inline-block w-auto">
                     <option value="">Tất cả trạng thái</option>
-                    <option value="Available">Còn hàng</option>
-                    <option value="Discontinued">Ngừng cung cấp</option>
+                    <option value="Còn hàng">Còn hàng</option>
+                    <option value="Ngừng cung cấp">Ngừng cung cấp</option>
                 </select>
             </div>
         </div>
@@ -104,7 +102,9 @@
                     <th class="text-center" style="width: 15%">Thao tác</th>
                 </tr>
             </thead>
-            <tbody id="bookTableBody"></tbody>
+            <tbody id="bookTableBody">
+                <tr><td colspan="8" class="text-center py-5 text-muted">Đang tải dữ liệu...</td></tr>
+            </tbody>
         </table>
         <div class="d-flex justify-content-between align-items-center mt-3">
             <small class="text-muted">Hiển thị <span id="showing">0</span> trong tổng <span id="totalBooks">0</span> sách</small>
@@ -148,7 +148,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Thể loại <span class="text-danger">*</span></label>
                             <select class="form-select" id="categoryId" required>
-                                <option value="">Chọn thể loại</option>
+                                <option value="">Đang tải thể loại...</option>
                             </select>
                         </div>
                     </div>
@@ -180,7 +180,7 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Xác nhận xóa</h5>
+                <h5 class="modal-title">Xác nhận xóa</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
@@ -197,19 +197,18 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const API_URL = '/api/books';
+    const BOOK_API = '/api/books';
+    const CATEGORY_API = '/api/books/categories';  // ĐÚNG 100% – ĐÃ CÓ TRONG BOOKRESTCONTROLLER
     const csrfToken = /*[[${_csrf.token}]]*/ '';
     const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
     let deleteId = null;
 
-    // Gửi CSRF token cho POST/PUT/DELETE
     $(document).ajaxSend(function(e, xhr, options) {
         if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.type)) {
             xhr.setRequestHeader(csrfHeader, csrfToken);
         }
     });
 
-    // Toast thông báo
     function showToast(message, type = 'success') {
         const bg = type === 'success' ? 'bg-success' : 'bg-danger';
         const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
@@ -236,7 +235,7 @@
     }
 
     function loadBooks() {
-        $.get(API_URL).done(books => {
+        $.get(BOOK_API).done(books => {
             const tbody = $('#bookTableBody');
             tbody.empty();
             $('#totalBooks').text(books.length);
@@ -248,6 +247,7 @@
             }
 
             books.forEach((book, index) => {
+                const statusText = book.status === 'Available' ? 'Còn hàng' : 'Ngừng cung cấp';
                 const statusClass = book.status === 'Available' ? 'status-Available' : 'status-Discontinued';
                 const row = `
                     <tr class="new-row-pulse" data-category-id="${book.category?.categoryId || ''}">
@@ -262,9 +262,7 @@
                         <td class="text-center">${book.publishYear || 'N/A'}</td>
                         <td class="text-center"><span class="quantity-badge">${book.quantity || 0}</span></td>
                         <td class="text-center">
-                            <span class="status-badge ${statusClass}">
-                                ${book.status === 'Available' ? 'Còn hàng' : 'Ngừng cung cấp'}
-                            </span>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
                         </td>
                         <td class="text-center">
                             <a href="/admin/books/${book.bookId}/detail" class="btn btn-sm btn-outline-info me-1" title="Chi tiết">
@@ -280,27 +278,32 @@
                     </tr>`;
                 tbody.append(row);
             });
-        }).fail(() => showToast('Không tải được danh sách sách!', 'danger'));
+        }).fail(() => {
+            showToast('Không tải được danh sách sách!', 'danger');
+            $('#bookTableBody').html('<tr><td colspan="8" class="text-center text-danger py-5">Lỗi kết nối server</td></tr>');
+        });
     }
 
     function loadCategories() {
-        $.get(API_URL + '/categories').done(cats => {
+        $.get(CATEGORY_API).done(cats => {
             const modalSelect = $('#categoryId');
             const filterSelect = $('#categoryFilter');
-            modalSelect.find('option:not(:first)').remove();
-            filterSelect.find('option:not(:first)').remove();
+            modalSelect.empty().append('<option value="">Chọn thể loại</option>');
+            filterSelect.empty().append('<option value="">Tất cả thể loại</option>');
 
             cats.forEach(cat => {
                 const option = `<option value="${cat.categoryId}">${escapeHtml(cat.categoryName)}</option>`;
                 modalSelect.append(option);
                 filterSelect.append(option);
             });
+        }).fail(() => {
+            $('#categoryId').html('<option value="">Lỗi tải thể loại</option>');
+            showToast('Không tải được danh sách thể loại!', 'danger');
         });
     }
 
-    // Lọc sách
     $('#searchInput, #categoryFilter, #statusFilter').on('input change', function() {
-        const search = $('#searchInput').val().toLowerCase();
+        const search = $('#searchInput').val().toLowerCase().trim();
         const catId = $('#categoryFilter').val();
         const status = $('#statusFilter').val();
         let visible = 0;
@@ -311,7 +314,7 @@
             const rowCatId = $row.data('category-id') + '';
             const rowStatus = $row.find('.status-badge').text().trim();
 
-            const matchSearch = title.includes(search);
+            const matchSearch = !search || title.includes(search);
             const matchCat = !catId || rowCatId === catId;
             const matchStatus = !status || rowStatus === status;
 
@@ -322,7 +325,6 @@
         $('#showing').text(visible);
     });
 
-    // Submit form (Thêm/Sửa)
     $('#bookForm').submit(function(e) {
         e.preventDefault();
         const id = $('#bookId').val();
@@ -337,7 +339,7 @@
         };
 
         const method = id ? 'PUT' : 'POST';
-        const url = id ? `${API_URL}/${id}` : API_URL;
+        const url = id ? `${BOOK_API}/${id}` : BOOK_API;
 
         $.ajax({
             url, method, contentType: 'application/json', data: JSON.stringify(data),
@@ -346,14 +348,16 @@
                 loadBooks();
                 showToast(id ? 'Cập nhật sách thành công!' : 'Thêm sách thành công!', 'success');
             },
-            error: () => showToast('Lưu sách thất bại!', 'danger')
+            error: xhr => {
+                const msg = xhr.responseJSON?.error || xhr.responseText || 'Lưu sách thất bại!';
+                showToast(msg, 'danger');
+            }
         });
     });
 
-    // Edit
     $(document).on('click', '.btn-edit', function() {
         const id = $(this).data('id');
-        $.get(`${API_URL}/${id}`).done(book => {
+        $.get(`${BOOK_API}/${id}`).done(book => {
             $('#bookId').val(book.bookId);
             $('#modalTitle').text('Sửa sách');
             $('#title').val(book.title);
@@ -364,20 +368,18 @@
             $('#categoryId').val(book.category?.categoryId || '');
             $('#status').val(book.status);
             $('#addBookModal').modal('show');
-        });
+        }).fail(() => showToast('Không tải được thông tin sách!', 'danger'));
     });
 
-    // Mở modal xác nhận xóa
     $(document).on('click', '.btn-delete', function() {
         deleteId = $(this).data('id');
         $('#confirmDeleteModal').modal('show');
     });
 
-    // Xác nhận xóa
     $('#confirmDeleteBtn').click(function() {
         if (!deleteId) return;
         $.ajax({
-            url: `${API_URL}/${deleteId}`, method: 'DELETE',
+            url: `${BOOK_API}/${deleteId}`, method: 'DELETE',
             success: () => {
                 $('#confirmDeleteModal').modal('hide');
                 loadBooks();

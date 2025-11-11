@@ -1,6 +1,8 @@
 package com.example.library.entity;
 
 import com.example.library.entity.enums.BookStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.*;
 

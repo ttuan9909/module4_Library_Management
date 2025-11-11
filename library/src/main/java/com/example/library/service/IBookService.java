@@ -9,10 +9,10 @@ import java.util.Optional;
 
 public interface IBookService {
 
-    // Lấy danh sách sách
+    // Lấy danh sách sách (dùng cho admin CRUD)
     List<BookListDTO> getAllBooks();
 
-    // Lấy sách chi tiết theo ID (BookListDTO để dùng CRUD trong admin)
+    // Lấy sách chi tiết theo ID (dùng cho admin edit/detail)
     BookListDTO getBookById(Long id);
 
     // Tạo mới sách
@@ -24,9 +24,9 @@ public interface IBookService {
     // Xóa sách
     void deleteBook(Long id);
 
-    // Lấy tất cả thể loại
+    // Lấy tất cả thể loại (dùng cho dropdown)
     List<Category> getAllCategories();
 
-    // Lấy chi tiết sách trả ra Bookdto dành cho API ngoài (nếu cần)
+    // Lấy chi tiết sách cho API công khai (nếu có frontend riêng)
     Optional<Bookdto> findById(Long id);
 }

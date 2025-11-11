@@ -131,6 +131,7 @@ public class BookService implements IBookService {
                 .bookId(book.getBookId())
                 .title(book.getTitle())
                 .category(book.getCategory())
+                .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
                 .publisher(book.getPublisher())
                 .publishYear(book.getPublishYear())
                 .language(book.getLanguage())
@@ -153,3 +154,5 @@ public class BookService implements IBookService {
         book.setDescription(dto.getDescription());
     }
 }
+
+
