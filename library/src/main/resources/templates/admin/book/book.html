@@ -1,89 +1,410 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Library</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <title>Danh sách sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- CSRF TOKEN -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <style>
+        body { background-color: #f6f7fb; font-family: "Segoe UI", sans-serif; }
+        .sidebar { width: 250px; height: 100vh; background-color: #f8f9fa; border-right: 1px solid #e5e5e5;
+                   position: fixed; top: 0; left: 0; padding: 0 20px 20px 20px; }
+        .sidebar-brand { padding: 20px 0; margin-bottom: 10px; border-bottom: 1px solid #e5e5e5; text-align: left; }
+        .sidebar-brand h4 { margin: 0; font-weight: 700; color: #1c7c54; }
+        .sidebar a { display: flex; align-items: center; padding: 10px 15px; border-radius: 6px; color: #333;
+                     text-decoration: none; margin-bottom: 6px; }
+        .sidebar a.active { background-color: #e0f3eb; color: #1c7c54; font-weight: 600; }
+        .sidebar a:hover { background-color: #f0f0f0; transition: background-color 0.2s; }
+        .sidebar i { width: 25px; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .page-header { background-color: #fff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                       display: flex; justify-content: space-between; align-items: center; }
+        .client-table { background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding: 20px; margin-top: 20px; }
+        .table td { padding: 12px; }
+        .status-badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; color: #fff; font-weight: 600;
+                        display: inline-block; min-width: 80px; text-align: center; }
+        .status-Available { background-color: #1c7c54; }
+        .status-Discontinued { background-color: #6c757d; }
+        .quantity-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background-color: #0d6efd; color: #fff; }
+        @keyframes pulse-green { 0% { background-color: #e0f3eb; } 100% { background-color: transparent; } }
+        .new-row-pulse { animation: pulse-green 2s ease-out forwards; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    </style>
 </head>
 <body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <a th:href="@{/admin}" class="text-decoration-none text-dark d-inline-block">
+            <h4><i class="fas fa-book-open me-2"></i>LIBRARY LOGO</h4>
+        </a>
+    </div>
+    <a th:href="@{/admin}"><i class="fas fa-hand-holding-usd"></i> Book Lending</a>
+    <a th:href="@{/return}"><i class="fas fa-undo-alt"></i> Book Return</a>
+    <a th:href="@{/admin/books}" class="active"><i class="fas fa-book"></i> Book List</a>
+    <a th:href="@{/publications}"><i class="fas fa-newspaper"></i> Publications</a>
+    <a th:href="@{/categories}"><i class="fas fa-tags"></i> Book Categories</a>
+    <a th:href="@{/admin/users}"><i class="fas fa-users"></i> Members</a>
+</div>
 
-<div th:replace="admin/fragment/sidebar :: sidebar"></div>
-
-<!-- Main content -->
 <div class="main-content">
-    <div class="page-header mb-4">
-        <h5 class="mb-0">CLIENT LIST</h5>
-        <button class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> Add Client
+    <div class="page-header">
+        <h4 class="m-0">
+            <i class="fas fa-book me-2 text-primary"></i> Danh sách sách
+        </h4>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal"
+                onclick="resetForm()">
+            <i class="fas fa-plus-circle me-1"></i> Thêm sách mới
         </button>
     </div>
 
-    <div class="client-table">
-        <!-- Table Controls -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                Show
-                <select class="form-select d-inline-block w-auto">
-                    <option>10</option>
-                    <option>25</option>
-                </select>
-                entries
+    <!-- Tìm kiếm & Lọc -->
+    <div class="client-table p-3 mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm theo tiêu đề...">
+                </div>
             </div>
-            <input type="text" class="form-control w-auto" placeholder="Search...">
+            <div class="col-md-7 text-end">
+                <label class="form-label me-2 mb-0 fw-bold text-muted">Lọc:</label>
+                <select id="categoryFilter" class="form-select d-inline-block w-auto me-2">
+                    <option value="">Tất cả thể loại</option>
+                </select>
+                <select id="statusFilter" class="form-select d-inline-block w-auto">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Còn hàng">Còn hàng</option>
+                    <option value="Ngừng cung cấp">Ngừng cung cấp</option>
+                </select>
+            </div>
         </div>
+    </div>
 
-        <!-- Table -->
-        <table class="table align-middle table-hover">
+    <!-- Bảng sách -->
+    <div class="client-table">
+        <table id="bookTable" class="table table-hover align-middle">
             <thead class="table-light">
-            <tr>
-                <th>Sr. No</th>
-                <th>Client Name</th>
-                <th>Company Name</th>
-                <th>Email</th>
-                <th>Country</th>
-                <th>Mobile</th>
-                <th>Registered On</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+                <tr>
+                    <th class="text-center" style="width: 5%">#</th>
+                    <th style="width: 25%">Tiêu đề</th>
+                    <th style="width: 15%">Thể loại</th>
+                    <th style="width: 15%">Nhà XB</th>
+                    <th class="text-center" style="width: 10%">Năm XB</th>
+                    <th class="text-center" style="width: 10%">Số lượng</th>
+                    <th class="text-center" style="width: 10%">Trạng thái</th>
+                    <th class="text-center" style="width: 15%">Thao tác</th>
+                </tr>
             </thead>
-            <tbody>
-            <tr>
-                <td>1</td>
-                <td>
-                    <img src="https://i.pravatar.cc/35" class="rounded-circle me-2" width="35" height="35" alt="">
-                    Praveen Kumar
-                </td>
-                <td>11</td>
-                <td>purohitpraveen871@gmail.com</td>
-                <td>India</td>
-                <td>234567890</td>
-                <td>2025-10-06 11:41:23</td>
-                <td><span class="status-badge">Active</span></td>
-                <td>
-                    <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i></button>
-                    <button class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
-                </td>
-            </tr>
+            <tbody id="bookTableBody">
+                <tr><td colspan="8" class="text-center py-5 text-muted">Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
-
-        <!-- Pagination -->
-        <nav>
-            <ul class="pagination justify-content-end">
-                <li class="page-item"><a class="page-link" href="#">First</a></li>
-                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                <li class="page-item"><a class="page-link" href="#">Last</a></li>
-            </ul>
-        </nav>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">Hiển thị <span id="showing">0</span> trong tổng <span id="totalBooks">0</span> sách</small>
+        </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal Thêm/Sửa Sách -->
+<div class="modal fade" id="addBookModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="bookForm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Thêm sách mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="bookId">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nhà xuất bản</label>
+                            <input type="text" class="form-control" id="publisher">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-3">
+                            <label class="form-label">Năm XB</label>
+                            <input type="number" class="form-control" id="publishYear" min="1000" max="2100">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Ngôn ngữ</label>
+                            <input type="text" class="form-control" id="language">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Thể loại <span class="text-danger">*</span></label>
+                            <select class="form-select" id="categoryId" required>
+                                <option value="">Đang tải thể loại...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-9">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" id="status">
+                                <option value="Available">Còn hàng</option>
+                                <option value="Discontinued">Ngừng cung cấp</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu sách</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Xóa -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-2">Bạn có chắc chắn muốn <strong>xóa sách này</strong>?</p>
+                <p class="text-muted small">Hành động này <strong>không thể hoàn tác</strong>.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa ngay</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const BOOK_API = '/api/books';
+    const CATEGORY_API = '/api/books/categories';  // ĐÚNG 100% – ĐÃ CÓ TRONG BOOKRESTCONTROLLER
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+    let deleteId = null;
+
+    $(document).ajaxSend(function(e, xhr, options) {
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.type)) {
+            xhr.setRequestHeader(csrfHeader, csrfToken);
+        }
+    });
+
+    function showToast(message, type = 'success') {
+        const bg = type === 'success' ? 'bg-success' : 'bg-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        const toastHtml = `
+            <div class="toast align-items-center text-white ${bg} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${icon} me-2"></i> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+        $('#toastContainer').append(toastHtml);
+        const newToast = $('#toastContainer .toast').last()[0];
+        const bsToast = new bootstrap.Toast(newToast, { delay: 3000 });
+        bsToast.show();
+        $(newToast).on('hidden.bs.toast', () => $(newToast).remove());
+    }
+
+    function resetForm() {
+        $('#bookForm')[0].reset();
+        $('#bookId').val('');
+        $('#modalTitle').text('Thêm sách mới');
+    }
+
+    function loadBooks() {
+        $.get(BOOK_API).done(books => {
+            const tbody = $('#bookTableBody');
+            tbody.empty();
+            $('#totalBooks').text(books.length);
+            $('#showing').text(books.length);
+
+            if (books.length === 0) {
+                tbody.append('<tr><td colspan="8" class="text-center text-muted py-5">Không có sách nào</td></tr>');
+                return;
+            }
+
+            books.forEach((book, index) => {
+                const statusText = book.status === 'Available' ? 'Còn hàng' : 'Ngừng cung cấp';
+                const statusClass = book.status === 'Available' ? 'status-Available' : 'status-Discontinued';
+                const row = `
+                    <tr class="new-row-pulse" data-category-id="${book.category?.categoryId || ''}">
+                        <td class="text-center">${index + 1}</td>
+                        <td>
+                            <a href="/admin/books/${book.bookId}/detail" class="text-decoration-none fw-bold">
+                                ${escapeHtml(book.title)}
+                            </a>
+                        </td>
+                        <td>${escapeHtml(book.category?.categoryName || 'N/A')}</td>
+                        <td>${escapeHtml(book.publisher || 'N/A')}</td>
+                        <td class="text-center">${book.publishYear || 'N/A'}</td>
+                        <td class="text-center"><span class="quantity-badge">${book.quantity || 0}</span></td>
+                        <td class="text-center">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="text-center">
+                            <a href="/admin/books/${book.bookId}/detail" class="btn btn-sm btn-outline-info me-1" title="Chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${book.bookId}" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${book.bookId}" title="Xóa">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                tbody.append(row);
+            });
+        }).fail(() => {
+            showToast('Không tải được danh sách sách!', 'danger');
+            $('#bookTableBody').html('<tr><td colspan="8" class="text-center text-danger py-5">Lỗi kết nối server</td></tr>');
+        });
+    }
+
+    function loadCategories() {
+        $.get(CATEGORY_API).done(cats => {
+            const modalSelect = $('#categoryId');
+            const filterSelect = $('#categoryFilter');
+            modalSelect.empty().append('<option value="">Chọn thể loại</option>');
+            filterSelect.empty().append('<option value="">Tất cả thể loại</option>');
+
+            cats.forEach(cat => {
+                const option = `<option value="${cat.categoryId}">${escapeHtml(cat.categoryName)}</option>`;
+                modalSelect.append(option);
+                filterSelect.append(option);
+            });
+        }).fail(() => {
+            $('#categoryId').html('<option value="">Lỗi tải thể loại</option>');
+            showToast('Không tải được danh sách thể loại!', 'danger');
+        });
+    }
+
+    $('#searchInput, #categoryFilter, #statusFilter').on('input change', function() {
+        const search = $('#searchInput').val().toLowerCase().trim();
+        const catId = $('#categoryFilter').val();
+        const status = $('#statusFilter').val();
+        let visible = 0;
+
+        $('#bookTableBody tr').each(function() {
+            const $row = $(this);
+            const title = $row.find('td:eq(1)').text().toLowerCase();
+            const rowCatId = $row.data('category-id') + '';
+            const rowStatus = $row.find('.status-badge').text().trim();
+
+            const matchSearch = !search || title.includes(search);
+            const matchCat = !catId || rowCatId === catId;
+            const matchStatus = !status || rowStatus === status;
+
+            const show = matchSearch && matchCat && matchStatus;
+            $row.toggle(show);
+            if (show) visible++;
+        });
+        $('#showing').text(visible);
+    });
+
+    $('#bookForm').submit(function(e) {
+        e.preventDefault();
+        const id = $('#bookId').val();
+        const data = {
+            title: $('#title').val().trim(),
+            publisher: $('#publisher').val().trim() || null,
+            publishYear: $('#publishYear').val() ? parseInt($('#publishYear').val()) : null,
+            language: $('#language').val().trim() || null,
+            description: $('#description').val().trim() || null,
+            categoryId: parseInt($('#categoryId').val()),
+            status: $('#status').val()
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${BOOK_API}/${id}` : BOOK_API;
+
+        $.ajax({
+            url, method, contentType: 'application/json', data: JSON.stringify(data),
+            success: () => {
+                $('#addBookModal').modal('hide');
+                loadBooks();
+                showToast(id ? 'Cập nhật sách thành công!' : 'Thêm sách thành công!', 'success');
+            },
+            error: xhr => {
+                const msg = xhr.responseJSON?.error || xhr.responseText || 'Lưu sách thất bại!';
+                showToast(msg, 'danger');
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        $.get(`${BOOK_API}/${id}`).done(book => {
+            $('#bookId').val(book.bookId);
+            $('#modalTitle').text('Sửa sách');
+            $('#title').val(book.title);
+            $('#publisher').val(book.publisher || '');
+            $('#publishYear').val(book.publishYear || '');
+            $('#language').val(book.language || '');
+            $('#description').val(book.description || '');
+            $('#categoryId').val(book.category?.categoryId || '');
+            $('#status').val(book.status);
+            $('#addBookModal').modal('show');
+        }).fail(() => showToast('Không tải được thông tin sách!', 'danger'));
+    });
+
+    $(document).on('click', '.btn-delete', function() {
+        deleteId = $(this).data('id');
+        $('#confirmDeleteModal').modal('show');
+    });
+
+    $('#confirmDeleteBtn').click(function() {
+        if (!deleteId) return;
+        $.ajax({
+            url: `${BOOK_API}/${deleteId}`, method: 'DELETE',
+            success: () => {
+                $('#confirmDeleteModal').modal('hide');
+                loadBooks();
+                showToast('Xóa sách thành công!', 'success');
+            },
+            error: () => {
+                $('#confirmDeleteModal').modal('hide');
+                showToast('Xóa sách thất bại!', 'danger');
+            }
+        });
+        deleteId = null;
+    });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    $(document).ready(() => {
+        loadCategories();
+        loadBooks();
+    });
+    /*]]>*/
+</script>
 </body>
 </html>

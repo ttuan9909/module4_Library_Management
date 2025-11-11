@@ -1,6 +1,8 @@
 package com.example.library.entity;
 
 import com.example.library.entity.enums.BookStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,4 +42,5 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 12)
     private BookStatus status = BookStatus.Available;
+    
 }
