@@ -7,6 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/ad-lending.css}">
+    <style>
+        .toast {
+            opacity: 0.95;
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
 </head>
 <body>
 <div th:replace="admin/fragment/sidebar :: sidebar"></div>
@@ -55,11 +61,41 @@
     </div>
 </div>
 
+<!-- Toast container (hiển thị góc trên phải) -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
+    <div id="toastMessage"
+         class="toast align-items-center text-bg-primary border-0 shadow"
+         role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastBody">
+                <!-- Message sẽ được chèn vào đây -->
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let selectedBooks = [];
 
-    // Tìm sách theo mã
+    // 🟦 Hàm hiển thị toast ở góc trên phải
+    function showToast(message, type = "primary") {
+        const toastEl = document.getElementById("toastMessage");
+        const toastBody = document.getElementById("toastBody");
+
+        // Đổi màu nền tùy loại
+        toastEl.className = `toast align-items-center text-bg-${type} border-0 shadow`;
+
+        toastBody.textContent = message;
+
+        const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+        toast.show();
+    }
+
+    // 🔍 Tìm sách theo mã
     function searchBook() {
         const code = $("#bookSelectInput").val().trim();
         if (!code) {
@@ -73,23 +109,27 @@
             success: function(data) {
                 if (!data) {
                     $("#searchBookErrorMessage").text("Book not found.");
+                    showToast("Book not found.", "warning");
                     return;
                 }
                 if (selectedBooks.some(b => b.barcode === data.barcode)) {
                     $("#searchBookErrorMessage").text("This book is already selected.");
+                    showToast("This book is already selected.", "warning");
                     return;
                 }
                 selectedBooks.push(data);
                 showSelectedBooks();
                 $("#searchBookErrorMessage").text("");
+                // showToast("Book added to return list.", "success");
             },
             error: function() {
                 $("#searchBookErrorMessage").text("Error fetching book.");
+                showToast("Error fetching book.", "danger");
             }
         });
     }
 
-    // Hiển thị sách đã chọn
+    // 📚 Hiển thị sách đã chọn
     function showSelectedBooks() {
         const today = new Date();
         const rows = selectedBooks.map((book, index) => {
@@ -102,7 +142,6 @@
                 book.status = "Returned";
             }
 
-            // Chỉ hiển thị các trạng thái hợp lệ
             const statusOptions = ["Returned", "LostOrDamaged", "Overdue"]
                 .map(s => `<option value="${s}" ${book.status === s ? 'selected' : ''}>${s}</option>`)
                 .join("");
@@ -116,10 +155,15 @@
                 <td>${book.borrowDate || '-'}</td>
                 <td>${book.dueDate || '-'}</td>
                 <td>
-                    <input type="number" class="form-control form-control-sm text-end fine-input" value="${fine}" min="0" onchange="updateFine(${index}, this.value)">
+                    <input type="number"
+                           class="form-control form-control-sm text-end fine-input"
+                           value="${fine}"
+                           min="0"
+                           onchange="updateFine(${index}, this.value)">
                 </td>
                 <td>
-                    <select class="form-select form-select-sm" onchange="updateStatus(${index}, this.value)">
+                    <select class="form-select form-select-sm"
+                            onchange="updateStatus(${index}, this.value)">
                         ${statusOptions}
                     </select>
                 </td>
@@ -137,6 +181,7 @@
     function removeBook(index) {
         selectedBooks.splice(index, 1);
         showSelectedBooks();
+        showToast("Book removed.", "info");
     }
 
     function updateFine(index, newFine) {
@@ -153,16 +198,18 @@
         $("#totalFine").text(total.toLocaleString("vi-VN") + " ₫");
     }
 
-    // Gửi trả sách cho nhiều user
+    // 📤 Gửi yêu cầu trả sách
     function returnBooks() {
         if (selectedBooks.length === 0) {
-            alert("Please select at least one book.");
+            showToast("Please select at least one book.", "warning");
             return;
         }
 
         const usersMap = {};
         selectedBooks.forEach(book => {
-            if (!usersMap[book.userId]) usersMap[book.userId] = { userId: book.userId, books: [] };
+            if (!usersMap[book.userId]) {
+                usersMap[book.userId] = { userId: book.userId, books: [] };
+            }
             usersMap[book.userId].books.push({
                 publicationId: book.publicationId,
                 returnDate: new Date().toISOString().split('T')[0],
@@ -179,11 +226,15 @@
             data: JSON.stringify(payload),
             contentType: "application/json",
             success: function() {
-                alert("Books returned successfully!");
-                location.reload();
+                showToast("Books returned successfully!", "success");
+                setTimeout(() => location.reload(), 1500);
             },
-            error: function() {
-                alert("Error returning books.");
+            error: function(xhr) {
+                let msg = "Error returning books.";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                }
+                showToast(msg, "danger");
             }
         });
 

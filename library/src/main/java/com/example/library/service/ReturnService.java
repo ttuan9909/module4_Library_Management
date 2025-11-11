@@ -39,14 +39,12 @@ public class ReturnService implements IReturnService {
                         + ", status = " + book.getStatus());
 
                 try {
-                    // 1️⃣ Tìm BorrowTicket theo publicationId + userId
                     BorrowTicket ticket = borrowRepo
                             .findByPublicationPublicationIdAndCardUserUserId(book.getPublicationId(), userId)
                             .orElseThrow(() -> new IllegalArgumentException(
                                     "No borrow record found for publicationId " + book.getPublicationId()
                                             + " and userId " + userId));
 
-                    // 2️⃣ Parse returnDate an toàn
                     LocalDate returnDate;
                     try {
                         returnDate = (book.getReturnDate() != null && !book.getReturnDate().isBlank())
@@ -58,25 +56,20 @@ public class ReturnService implements IReturnService {
                     }
                     ticket.setReturnDate(returnDate);
 
-                    // 3️⃣ Set trạng thái (nếu có)
                     if (book.getStatus() != null) {
                         ticket.setStatus(book.getStatus());
                     } else {
                         ticket.setStatus(BorrowStatus.Returned);
                     }
 
-                    // 4️⃣ Set fineAmount nếu có
                     if (book.getFineAmount() != null) {
                         ticket.setFineAmount(book.getFineAmount());
                     }
 
-                    // 5️⃣ Lưu BorrowTicket
                     borrowRepo.save(ticket);
 
-                    // 6️⃣ Tạo hoặc cập nhật FineTicket nếu có tiền phạt
                     if (book.getFineAmount() != null && book.getFineAmount().compareTo(BigDecimal.ZERO) > 0) {
 
-                        // ✅ Xác định loại phạt phù hợp
                         FineType fineType;
                         if (ticket.getStatus() == BorrowStatus.LostOrDamaged) {
                             fineType = FineType.LostOrDamaged;
@@ -96,11 +89,11 @@ public class ReturnService implements IReturnService {
                         fineRepo.save(fine);
                     }
 
-                    System.out.println("✅ Book processed successfully: publicationId = " + book.getPublicationId());
+                    System.out.println("Book processed successfully: publicationId = " + book.getPublicationId());
 
                 } catch (Exception e) {
-                    System.err.println("❌ Error processing publicationId=" + book.getPublicationId() + ": " + e.getMessage());
-                    throw e; // rollback transaction nếu có lỗi
+                    System.err.println("Error processing publicationId=" + book.getPublicationId() + ": " + e.getMessage());
+                    throw e;
                 }
             }
         }

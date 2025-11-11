@@ -7,6 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/ad-lending.css}">
+    <style>
+        .toast {
+            opacity: 0.95;
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,7 +21,7 @@
 <div class="main-content">
     <div class="page-header mb-4 d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Borrow Books</h5>
-        <button class="btn btn-primary" onclick="borrowBook()"> Save </button>
+        <button class="btn btn-primary" onclick="borrowBook()">Save</button>
     </div>
 
     <div class="content-area row g-4">
@@ -38,7 +44,7 @@
                 <h6 class="mb-3">Select Books to Borrow</h6>
 
                 <div class="input-group mb-2">
-                    <input id="bookSelectInput" type="text" class="form-control" placeholder="Enter Book Code" onkeyup="showSuggestions(this.value)">
+                    <input id="bookSelectInput" type="text" class="form-control" placeholder="Enter Book Code">
                     <button class="btn btn-primary" onclick="searchBook()">Select</button>
                 </div>
                 <small id="searchBookErrorMessage" class="text-danger"></small>
@@ -62,19 +68,46 @@
         </div>
     </div>
 </div>
-</body>
+
+<!-- Toast container - top right -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
+    <div id="toastMessage"
+         class="toast align-items-center text-bg-primary border-0 shadow"
+         role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastBody">
+                <!-- message -->
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let selectedBooks = [];
     let selectedUser = null;
+
+    // Toast helper
+    function showToast(message, type = "primary") {
+        const toastEl = document.getElementById("toastMessage");
+        const toastBody = document.getElementById("toastBody");
+
+        toastEl.className = `toast align-items-center text-bg-${type} border-0 shadow`;
+        toastBody.textContent = message;
+
+        const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+        toast.show();
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         const currentPath = window.location.pathname;
 
         document.querySelectorAll('.sidebar a').forEach(link => {
             const href = link.getAttribute('href');
-            // So khớp tuyệt đối hoặc bắt đầu bằng đường dẫn
-            if (currentPath.startsWith(href)) {
+            if (href && currentPath.startsWith(href)) {
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');
@@ -87,6 +120,7 @@
         if (!q) {
             $("#errorMessage").text("Please enter user ID, phone number or email.");
             $("#userInfo").empty();
+            showToast("Please enter user ID, phone number or email.", "warning");
             return;
         }
 
@@ -117,24 +151,17 @@
                             </div>
                         </div>
                     </div>
-                    `;
+                `;
                 $("#userInfo").html(card);
                 $("#errorMessage").text("");
+                showToast("Reader selected successfully.", "success");
             },
             error: function (xhr, status, error) {
-                // let message = "Have an error.";
-                // try {
-                //     const json = JSON.parse(xhr.responseText);
-                //     if (json.message) message = json.message;
-                // } catch (e) {
-                //     message = xhr.responseText || "Can't connect to server.";
-                // }
-
                 $("#errorMessage").text("User not found.");
                 $("#userInfo").empty();
                 console.error("Ajax error:", status, error);
+                showToast("User not found.", "danger");
             }
-
         });
     }
 
@@ -142,12 +169,11 @@
         const q = $("#bookSelectInput").val().trim();
         if (!q) {
             $("#searchBookErrorMessage").text("Please enter book code.");
-            $("#bookResult").empty();
+            showToast("Please enter book code.", "warning");
             return;
         }
 
         const url = "/api/v1/publications/" + encodeURIComponent(q);
-        $("#bookResult").empty();
 
         $.ajax({
             url: url,
@@ -156,6 +182,7 @@
                 const exists = selectedBooks.some(book => book.barcode === data.barcode);
                 if (exists) {
                     $("#searchBookErrorMessage").text("This book is already selected.");
+                    showToast("This book is already selected.", "warning");
                     return;
                 }
                 selectedBooks.push(data);
@@ -163,9 +190,11 @@
 
                 showSelectedBooks();
                 $("#searchBookErrorMessage").text("");
+                showToast("Book added to borrow list.", "success");
             },
             error: function (xhr, status, error) {
                 $("#searchBookErrorMessage").text("Book not found.");
+                showToast("Book not found.", "danger");
             }
         })
     }
@@ -173,7 +202,7 @@
     function showSelectedBooks() {
         const today = new Date();
         today.setDate(today.getDate() + 14);
-        const formattedDueDate = today.toISOString().split('T')[0]
+        const formattedDueDate = today.toISOString().split('T')[0];
 
         const rows = selectedBooks.map((book, index) => {
             return `
@@ -182,28 +211,33 @@
                 <td>${book.title}</td>
                 <td>${book.publisher}</td>
                 <td>
-                <input type="date" placeholder="Select due date" class="form-control-sm rounded-3 w-50 rounded-3 light-border" value="${formattedDueDate}">
+                    <input type="date"
+                           placeholder="Select due date"
+                           class="form-control-sm rounded-3 w-50 light-border"
+                           value="${formattedDueDate}">
                 </td>
-                <td><button class="btn btn-sm btn-danger" onclick="removeBook(${index})">Remove</button></td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="removeBook(${index})">Remove</button>
+                </td>
             </tr>`;
         }).join("");
         $("#selectedBooksTable tbody").html(rows);
     }
 
-
     function removeBook(index) {
         selectedBooks.splice(index, 1);
         showSelectedBooks();
+        showToast("Book removed from list.", "info");
     }
 
     function borrowBook() {
         if (!selectedUser) {
-            alert("Please select a user before borrowing books.");
+            showToast("Please select a user before borrowing books.", "warning");
             return;
         }
 
         if (selectedBooks.length === 0) {
-            alert("Please select at least one book.");
+            showToast("Please select at least one book.", "warning");
             return;
         }
 
@@ -216,7 +250,7 @@
         });
 
         const borrowBook = {
-            userId: selectedUser.id,
+            userId: selectedUser.id,   // giữ nguyên như bạn đang dùng
             books: books
         };
 
@@ -226,14 +260,16 @@
             data: JSON.stringify(borrowBook),
             contentType: "application/json",
             success: function (data) {
-                alert("Borrowed successfully.");
-                location.reload();
+                showToast("Borrowed successfully.", "success");
+                setTimeout(() => location.reload(), 1500);
             },
             error: function (xhr, status, error) {
-                alert("Can't borrow books.");
+                console.error("Borrow error:", status, error);
+                showToast("Can't borrow books.", "danger");
             }
-        })
+        });
 
         console.log(borrowBook);
     }
 </script>
+</html>
