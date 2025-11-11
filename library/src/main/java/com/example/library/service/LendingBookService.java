@@ -1,6 +1,7 @@
 package com.example.library.service;
 
 import com.example.library.dto.request.LendingRequestdto;
+import com.example.library.dto.response.BorrowInformation;
 import com.example.library.entity.BorrowTicket;
 import com.example.library.entity.LibraryCard;
 import com.example.library.entity.Publication;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LendingBookService implements ILendingBookService{
@@ -84,5 +86,10 @@ public class LendingBookService implements ILendingBookService{
         borrowTicketRepository.saveAll(borrowTickets);
 
         return true;
+    }
+
+    @Override
+    public Optional<BorrowInformation> findBorrowInformationByBarcode(String barcode) {
+        return Optional.of(borrowTicketRepository.findBorrowInformationByBarcode(barcode));
     }
 }

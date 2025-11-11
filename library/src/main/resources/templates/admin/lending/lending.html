@@ -68,6 +68,20 @@
     let selectedBooks = [];
     let selectedUser = null;
 
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            const href = link.getAttribute('href');
+            // So khớp tuyệt đối hoặc bắt đầu bằng đường dẫn
+            if (currentPath.startsWith(href)) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    });
+
     function searchUser() {
         const q = $("#readerSelectInput").val().trim();
         if (!q) {
