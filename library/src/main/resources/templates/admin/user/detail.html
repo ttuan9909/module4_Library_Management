@@ -21,10 +21,8 @@
             border-radius: .25rem;
         }
         .status-ACTIVE { background-color: #28a745; }
-        .status-EXPIRED { background-color: #dc3545; }
-        .status-SUSPENDED { background-color: #ffc107; color: #343a40; }
-        .status-UNKNOWN { background-color: #6c757d; }
-
+        .status-LOCKED { background-color: #dc3545; }
+        .status-DISABLED { background-color: #ffc107; color: #343a40; }
     </style>
 </head>
 <body>
@@ -131,7 +129,7 @@
                     </div>
 
                     <div class="text-center mt-4">
-                        <a th:href="@{/users}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i> Quay lại danh sách</a>
+                        <a th:href="@{/admin/users}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i> Quay lại danh sách</a>
                     </div>
                 </div>
             </div>

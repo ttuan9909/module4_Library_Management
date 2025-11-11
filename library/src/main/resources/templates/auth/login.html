@@ -127,7 +127,7 @@
                         <div class="col-md-7">
                             <div class="signin-up-form">
                                 <!-- FORM -->
-                                <form th:action="@{/login}" th:object="${loginRequest}" method="post" novalidate>
+                                <form th:action="@{//auth/login}" th:object="${loginRequest}" method="post" novalidate>
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <div class="form-group">
                                         <label for="identifier">Email address or Username</label>
