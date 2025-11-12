@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,17 +67,21 @@ public class BookController {
 
         return "books-media-list-view";
     }
-//    @GetMapping("/{id}")
-//    public ResponseEntity<?> findById(@PathVariable Long id) {
-//        if (id == null) {
-//            return ResponseEntity.status(400).build();
-//        } else {
-//            Bookdto book = bookService.findById(id).orElse(null);
-//            if (book == null) {
-//                return ResponseEntity.status(404).build();
-//            } else {
-//                return ResponseEntity.ok(book);
-//            }
-//        }
-//    }
+    @GetMapping("/{id}")
+    public String findById(@PathVariable Long id, Model model, RedirectAttributes redirectAttrs) {
+        if (id == null) {
+            redirectAttrs.addFlashAttribute("error", "Invalid book id.");
+            return "redirect:/books"; // chuyển về list page
+        }
+
+        Bookdto book = bookService.findById(id).orElse(null);
+        if (book == null) {
+            redirectAttrs.addFlashAttribute("error", "Book not found.");
+            return "redirect:/books";
+        }
+
+        model.addAttribute("book", book);
+        // trả về template thymeleaf: src/main/resources/templates/books/detail.html
+        return "books/detail";
+    }
 }

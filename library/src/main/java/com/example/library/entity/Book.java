@@ -44,4 +44,7 @@ Book {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = true)
     private Author author;
+
+    @Column(name = "cover_image")
+    private String coverImage;
 }

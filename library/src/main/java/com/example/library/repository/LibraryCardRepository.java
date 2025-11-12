@@ -12,4 +12,6 @@ public interface LibraryCardRepository extends JpaRepository<LibraryCard, Long> 
     boolean existsByCardNumber(String cardNumber);
     Optional<LibraryCard> findByUser_UserId(Long userId);
     Optional<LibraryCard> findByUser(UserAccount user);
+    void deleteByUser_UserId(Long userId);
+    Optional<LibraryCard> findByUserUserId(Long userId);
 }

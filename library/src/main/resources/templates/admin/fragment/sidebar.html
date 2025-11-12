@@ -1,12 +1,12 @@
 <div th:fragment="sidebar" xmlns:sec="http://www.w3.org/1999/xhtml">
     <div class="sidebar">
         <h4>LIBRARY LOGO</h4>
-        <a href="#" class="active">Book Lending</a>
-        <a href="#">Book Return</a>
-        <a href="#">Book List</a>
+        <a href="/admin/lending" class="active">Book Lending</a>
+        <a href="/admin/return">Book Return</a>
+        <a href="/admin/books">Book List</a>
         <a href="#">Publications</a>
         <a href="/category/list">Book Categories</a>
-        <a href="#">Members</a>
+        <a href="/admin/users">Members</a>
         <a href="/admin/borrow-renew">Renew</a>
 
         <!-- Phần account chỉ hiện khi role là ADMIN -->
