@@ -21,4 +21,5 @@ public class Bookdto {
     private String language;
     private String description;
     private BookStatus status;
+    private String coverImage;
 }

@@ -1,11 +1,25 @@
-<div th:fragment="sidebar">
+<div th:fragment="sidebar" xmlns:sec="http://www.w3.org/1999/xhtml">
     <div class="sidebar">
         <h4>LIBRARY LOGO</h4>
-        <a href="#" class="active">Book Lending</a>
-        <a href="#">Book Return</a>
-        <a href="#">Book List</a>
+        <a href="/admin/lending" class="active">Book Lending</a>
+        <a href="/admin/return">Book Return</a>
+        <a href="/admin/books">Book List</a>
         <a href="#">Publications</a>
-        <a href="#">Book Categories</a>
-        <a href="#">Members</a>
+        <a href="/category/list">Book Categories</a>
+        <a href="/admin/users">Members</a>
+        <a href="/admin/borrow-renew">Renew</a>
+
+        <!-- Phần account chỉ hiện khi role là ADMIN -->
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #ccc;"
+             sec:authorize="hasRole('ADMIN')">
+            <hr>
+            <div class="account-section">
+                <p>👤 <span th:text="${#authentication.name}">Admin</span></p>
+                <a href="/account">Account Settings</a><br>
+                <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-link p-0 align-baseline">Logout</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>

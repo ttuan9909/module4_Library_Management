@@ -10,4 +10,5 @@ public interface IBorrowRenewService {
     List<BorrowRenewRequest> getPendingRequests();
     void approveRequest(Long requestId, Long employeeId);
     void rejectRequest(Long requestId, Long employeeId, String reason);
+    List<BorrowRenewRequest> getMyRequests(String username);
 }

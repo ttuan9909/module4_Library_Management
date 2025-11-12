@@ -7117,6 +7117,8 @@ textarea {
   color: #fff;
   font-family: "FontAwesome"; }
 
+#header-v1 .dropdown-toggle::after {
+  color: #282828; }
 
 @media (max-width: 991.98px) {
   .form-group {

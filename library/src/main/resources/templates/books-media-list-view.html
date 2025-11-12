@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <title>Danh sách Sách</title>
+
+    <link th:href="@{/images/favicon.ico}" rel="icon" type="image/x-icon"/>
+    <link th:href="@{/css/font-awesome.min.css}" rel="stylesheet" type="text/css"/>
+    <link th:href="@{/css/aos.css}" rel="stylesheet" type="text/css"/>
+    <link th:href="@{/css/mmenu.css}" rel="stylesheet" type="text/css"/>
+    <link th:href="@{/css/mmenu.positioning.css}" rel="stylesheet" type="text/css"/>
+    <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css"/>
+    <style>
+        .book-thumb img {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<header id="header" class="inner-navbar-wrapper navbar-wrapper">
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <!-- Logo -->
+            <a class="navbar-brand" th:href="@{/}">
+                <img th:src="@{/images/logo-header-v1.png}" alt="Skille"/>
+            </a>
+
+            <!-- Ô search -->
+            <div class="inner-header-search d-none d-md-flex ms-3">
+                <input class="form-control" type="text" placeholder="Search Anything">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </div>
+
+            <!-- Toggle button (mobile) -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menu -->
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="nav navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/book}">Books &amp; Media</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/news}">News &amp; Events</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/pages}">Pages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/blog}">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/contact}">Contact</a>
+                    </li>
+                </ul>
+
+                <!-- Auth area -->
+                <div class="header-login-btn ml-3 d-flex align-items-center">
+                    <!-- Chưa đăng nhập -->
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/auth/login}" class="btn btn-light mr-2">
+                            <i class="fa fa-user"></i> Login
+                        </a>
+                        <a th:href="@{/auth/register}" class="btn btn-light">
+                            Register
+                        </a>
+                    </div>
+
+                    <!-- Đã đăng nhập -->
+                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center">
+                        <span class="mr-3">
+                            <i class="fa fa-user"></i>
+                            <strong sec:authentication="name">user</strong>
+                        </span>
+                        <a th:href="@{/account}" class="btn btn-light mr-2">My account</a>
+                        <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-light">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<section class="inner-page-banner">
+    <div class="container">
+        <div class="banner-header">
+            <h2>Danh sách Sách</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Sách</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<div id="content" class="site-content">
+    <div id="primary" class="content-area">
+        <main id="main" class="site-main">
+            <div class="books-media-list">
+                <div class="container">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <form class="event-search-filter" th:action="@{/book}" method="get">
+
+                                <input type="text"
+                                       name="q"
+                                       placeholder="Search Anything"
+                                       th:value="${keyword}">
+
+                                <select name="type">
+                                    <option value="title" th:selected="${type == 'title'}">Tên sách</option>
+                                    <option value="category" th:selected="${type == 'category'}">Thể loại</option>
+                                    <option value="author" th:selected="${type == 'author'}">Tác giả</option>
+                                    <option value="year" th:selected="${type == 'year'}">Năm XB</option>
+                                </select>
+
+                                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="books-media-header">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="books-media-grid-listing">
+
+                        <div class="row" th:if="${#lists.isEmpty(books)}">
+                            <div class="col-12 text-center py-5">
+                                <h4>Không tìm thấy sách nào.</h4>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6 col-lg-6 col-xl-4" th:each="book : ${books}">
+                                <div class="single-book-media">
+                                    <div class="book-thumb">
+                                        <a th:href="@{'/book/' + ${book.bookId}}">
+                                            <img th:src="${book.coverImage}" alt="Book Cover">
+                                        </a>
+                                    </div>
+                                    <div class="book-detail">
+                                        <div class="book-detail-hover">
+                                            <a class="category-tags bg-light-blue" th:text="${book.category?.categoryName ?: 'Chưa rõ'}">Thể loại</a>
+                                        </div>
+                                        <h3 class="book-media-title">
+                                            <a th:href="@{'/book/' + ${book.bookId}}" th:text="${book.title}">Tên sách</a>
+                                        </h3>
+                                        <p><strong th:text="'Author: ' + ${book.author?.authorName ?: 'Chưa rõ'}"></strong></p>
+                                        <p><strong th:text="'Năm XB: ' + ${book.publishYear}"></strong></p>
+
+                                        <div class="card-links">
+                                            <a th:href="@{'/book/' + ${book.bookId}}" class="btn btn-primary">
+                                                Xem chi tiết
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-center">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<section class="staffpick-box">
+</section>
+<section class="testimonial-main-v3">
+</section>
+
+<footer class="site-footer site-footer-v3">
+</footer>
+
+<script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/mmenu.min.js}"></script>
+<script th:src="@{/js/harvey.min.js}"></script>
+<script th:src="@{/js/waypoints.min.js}"></script>
+<script th:src="@{/js/facts.counter.min.js}"></script>
+<script th:src="@{/js/mixitup.min.js}"></script>
+<script th:src="@{/js/owl.carousel.min.js}"></script>
+<script th:src="@{/js/accordion.min.js}"></script>
+<script th:src="@{/js/masonry.min.js}"></script>
+<script th:src="@{/js/carousel.swipe.min.js}"></script>
+<script th:src="@{/js/card-slider-min.js}"></script>
+<script th:src="@{/js/aos.js}"></script>
+<script th:src="@{/js/highlight.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

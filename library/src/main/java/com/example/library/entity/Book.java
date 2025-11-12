@@ -11,7 +11,8 @@ import lombok.*;
 @Table(name = "book")
 @Entity
 @Builder
-public class Book {
+public class
+Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
@@ -40,4 +41,10 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 12)
     private BookStatus status = BookStatus.Available;
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = true)
+    private Author author;
+
+    @Column(name = "cover_image")
+    private String coverImage;
 }

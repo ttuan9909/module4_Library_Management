@@ -14,4 +14,7 @@ public class HomeController {
 
     @GetMapping("/admin/lending")
     public String lending() { return "admin/lending/lending"; }
+
+    @GetMapping("/admin/return")
+    public String returnBook() { return "admin/return/return"; }
 }

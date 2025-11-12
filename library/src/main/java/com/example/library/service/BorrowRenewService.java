@@ -6,6 +6,7 @@ import com.example.library.entity.enums.RenewRequestStatus;
 import com.example.library.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -152,5 +153,20 @@ public class BorrowRenewService implements IBorrowRenewService{
 
         renewRequestRepo.save(req);
     }
+
+    @Override
+    public List<BorrowRenewRequest> getMyRequests(String username) {
+        // 1. Tìm UserAccount từ username
+        UserAccount user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy user: " + username));
+
+        // 2. Tìm LibraryCard từ UserAccount
+        // (Giả sử bạn có hàm findByUser trong LibraryCardRepository)
+        LibraryCard card = cardRepo.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thẻ thư viện cho user này."));
+
+        // 3. Dùng hàm repository (Bước 1) để lấy danh sách
+        return renewRequestRepo.findByRequestedByOrderByRequestedAtDesc(card);
     }
+}
 
