@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Library - Category Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/ad-category.css}">
+    <style>
+        .toast {
+            opacity: 0.95;
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="admin/fragment/sidebar :: sidebar"></div>
+
+<!-- Main content -->
+<div class="main-content p-4">
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-book"></i> Danh sách thể loại</h5>
+        <a href="/category/add" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Thêm mới</a>
+    </div>
+
+    <div class="content-area">
+        <!-- Search form -->
+        <form th:action="@{/category/list}" method="get" class="d-flex mb-3">
+            <input class="form-control me-2" type="text" name="searchName"
+                   placeholder="Nhập tên thể loại..." th:value="${searchName}">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Tìm kiếm</button>
+        </form>
+
+        <!-- Category table -->
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark text-center">
+                <tr>
+                    <th style="width: 70px;">ID</th>
+                    <th>Tên thể loại</th>
+                    <th>Mô tả</th>
+                    <th style="width: 180px;">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="category : ${categoryPage.content}">
+                    <td th:text="${category.categoryId}" class="text-center"></td>
+                    <td th:text="${category.categoryName}"></td>
+                    <td th:text="${category.description}"></td>
+                    <td class="text-center">
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModal"
+                                th:attr="data-id=${category.categoryId}">
+                            <i class="bi bi-trash"></i> Xoá
+                        </button>
+                        <a th:href="@{/category/update/{id}(id=${category.categoryId})}"
+                           class="btn btn-warning btn-sm text-white">
+                            <i class="bi bi-pencil-square"></i> Sửa
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${categoryPage.content.isEmpty()}">
+                    <td colspan="4" class="text-center text-muted">Không có dữ liệu</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${categoryPage.totalPages > 1}" class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${categoryPage.first}? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/category/list(page=${categoryPage.number - 1}, searchName=${searchName})}">
+                        « Trước
+                    </a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, categoryPage.totalPages - 1)}"
+                    th:classappend="${i == categoryPage.number}? 'active'">
+                    <a class="page-link"
+                       th:text="${i + 1}"
+                       th:href="@{/category/list(page=${i}, searchName=${searchName})}"></a>
+                </li>
+                <li class="page-item" th:classappend="${categoryPage.last}? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/category/list(page=${categoryPage.number + 1}, searchName=${searchName})}">
+                        Sau »
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Modal confirm delete -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Xác nhận xoá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xoá thể loại này không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">Xoá</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 2000">
+    <div id="toastMessage" class="toast align-items-center text-bg-primary border-0 shadow"
+         role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Modal delete
+    const confirmModal = document.getElementById('confirmDeleteModal');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+
+    confirmModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const categoryId = button.getAttribute('data-id');
+        confirmBtn.href = '/category/delete/' + categoryId;
+    });
+
+    // Toast helper
+    function showToast(message, type = "primary") {
+        const toastEl = document.getElementById("toastMessage");
+        const toastBody = document.getElementById("toastBody");
+        toastEl.className = `toast align-items-center text-bg-${type} border-0 shadow`;
+        toastBody.textContent = message;
+        const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+        toast.show();
+    }
+
+    // Sidebar highlight
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.startsWith(href)) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>
