@@ -28,34 +28,44 @@ public class BookController {
     public String showBooks(@RequestParam(value = "q", required = false) String keyword,
                             @RequestParam(value = "type", required = false) String type,
                             Model model) {
-        List<Book> books = new ArrayList<>();
+
+        List<Book> books = List.of();
 
         if (keyword == null || keyword.isEmpty()) {
             books = bookRepository.findAll();
-            switch (type) {
-                case "category":
-                    books = bookRepository.findByCategoryName(keyword);
-                    break;
-                case "author":
-                    books = bookRepository.findByAuthorName(keyword);
-                    break;
-                case "year":
-                    try {
-                        books = bookRepository.findByPublishYear(Integer.parseInt(keyword));
-                    } catch (NumberFormatException e) {
-                        books = List.of();
-                    }
-                    break;
-                default:
-                    books = bookRepository.findByTitleContainingIgnoreCase(keyword);
-                    }
-                    }
+        } else {
+            // có keyword
+            if (type == null || type.isEmpty()) {
+                books = bookRepository.findByTitleContainingIgnoreCase(keyword);
+            } else {
+                switch (type) {
+                    case "category":
+                        books = bookRepository.findByCategoryName(keyword);
+                        break;
+                    case "author":
+                        books = bookRepository.findByAuthorName(keyword);
+                        break;
+                    case "year":
+                        try {
+                            int year = Integer.parseInt(keyword);
+                            books = bookRepository.findByPublishYear(year);
+                        } catch (NumberFormatException e) {
+                            books = List.of();
+                        }
+                        break;
+                    default:
+                        books = bookRepository.findByTitleContainingIgnoreCase(keyword);
+                        break;
+                }
+            }
+        }
 
         model.addAttribute("books", books);
         model.addAttribute("keyword", keyword);
         model.addAttribute("type", type);
+
         return "books-media-list-view";
-}
+    }
 //    @GetMapping("/{id}")
 //    public ResponseEntity<?> findById(@PathVariable Long id) {
 //        if (id == null) {

@@ -62,7 +62,7 @@
                             <i class="fa fa-user"></i>
                             <strong sec:authentication="name">user</strong>
                         </span>
-                        <a th:href="@{/account}" class="btn btn-light mr-2">My account</a>
+
                         <form th:action="@{/auth/logout}" method="post" class="d-inline">
                             <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <button type="submit" class="btn btn-light">Logout</button>

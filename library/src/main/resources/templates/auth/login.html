@@ -127,7 +127,7 @@
                         <div class="col-md-7">
                             <div class="signin-up-form">
                                 <!-- FORM -->
-                                <form th:action="@{/auth/login}" th:object="${loginRequest}" method="post" novalidate>
+                                <form th:action="@{/auth/login}"  th:object="${loginRequest}" method="post" novalidate>
                                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                                     <div class="form-group">
@@ -184,5 +184,6 @@
 <script th:src="@{/js/aos.js}"></script>
 <script th:src="@{/js/highlight.min.js}"></script>
 <script th:src="@{/js/main.js}"></script>
+
 </body>
 </html>

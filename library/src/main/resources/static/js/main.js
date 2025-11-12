@@ -540,19 +540,32 @@ $(function () {
 
   // Scroll to top
   var mybutton = document.getElementById("myBtn");
-  // When the user scrolls down 20px from the top of the document, show the button
-  window.onscroll = function () { scrollFunction() };
+
+  // Khi người dùng cuộn chuột, gọi hàm scrollFunction
+  window.onscroll = function () {
+    scrollFunction()
+  };
+
   function scrollFunction() {
+    // KIỂM TRA XEM NÚT "myBtn" CÓ TỒN TẠI KHÔNG.
+    // Nếu "mybutton" là null (không tồn tại), thì "return" (nghỉ), không làm gì cả.
+    if (!mybutton) {
+      return;
+    }
+
+    // Nếu nút tồn tại, mới chạy code style
     if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
       mybutton.style.display = "block";
     } else {
       mybutton.style.display = "none";
     }
   }
-  // When the user clicks on the button, scroll to the top of the document
+
+  // Khi người dùng click vào nút, cuộn lên đầu
+  // (Sửa lại code này để dùng jQuery cho an toàn)
   $('#myBtn').click(function (e) {
-    document.body.scrollTop = 0; // For Safari
-    document.documentElement.scrollTop = 0;
-  })
+    // Dùng animate của jQuery (mượt hơn)
+    $('html, body').animate({ scrollTop: 0 }, 500); // 500ms
+  });
 
 });

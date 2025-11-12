@@ -64,21 +64,35 @@
                             </div>
 
                             <!-- ĐÃ đăng nhập -->
-                            <div class="topbar-links" sec:authorize="isAuthenticated()">
-                                <span class="me-2">
-                                  <i class="fa fa-user"></i>
-                                  <strong sec:authentication="name">user</strong>
-                                </span>
+                            <div class="dropdown topbar-links" sec:authorize="isAuthenticated()">
 
-<!--                                <a class="me-2" th:href="@{/account}">My Account</a>-->
+                                <a class="dropdown-toggle" href="#"
+                                   role="button"
+                                   id="userDropdownMenu"
+                                   data-toggle="dropdown"
+                                   aria-expanded="false"
+                                   style="text-decoration: none; color: white !important;"> <i class="fa fa-user"></i>
+                                    <strong sec:authentication="name">user</strong>
+                                </a>
 
-<!--                                <form th:action="@{/auth/logout}" method="post" class="d-inline">-->
-<!--                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
-<!--                                    <button type="submit" class="btn btn-link p-0 align-baseline">Logout</button>-->
-<!--                                </form>-->
-                                <form th:action="@{/auth/logout}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-link p-0 align-baseline">Logout</button>
-                                </form>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdownMenu">
+
+                                    <a class="dropdown-item" th:href="@{/account}" style="color: black !important;">
+                                        My Account
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+
+                                    <div class="dropdown-item-wrapper">
+                                        <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-link dropdown-item"
+                                                    style="padding: 0.25rem 1.5rem; width: 100%; text-align: left; color: black !important; text-decoration: none;">
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 
@@ -1830,8 +1844,7 @@
 
 
 <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
+<script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
 <!-- jQuery UI -->
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
